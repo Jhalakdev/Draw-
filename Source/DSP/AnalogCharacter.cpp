@@ -361,6 +361,7 @@ void AnalogCharacter::loadPreset()
     modAmount = 0.0f;
 
     useWDF = false;
+    wdfMakeupGain = 1.0f;
 
     auto setAll = [&](CircuitStage& s, float atk, float rel, float drive, int type, float leak = 0.999f) {
         s.setTimes(atk, rel, (float)sampleRate);
@@ -378,6 +379,7 @@ void AnalogCharacter::loadPreset()
         case FormPassive:
         {
             useWDF = true;
+            wdfMakeupGain = 40.0f;
             wdfEngine = createWDFEngine(WDF_MisterPassive, sr);
             wdfEngine2 = createWDFEngine(WDF_MisterPassive, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 42);
@@ -403,6 +405,7 @@ void AnalogCharacter::loadPreset()
         case CraneSong:
         {
             useWDF = true;
+            wdfMakeupGain = 35.0f;
             wdfEngine = createWDFEngine(WDF_KraneMybiz, sr);
             wdfEngine2 = createWDFEngine(WDF_KraneMybiz, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 43);
@@ -428,6 +431,7 @@ void AnalogCharacter::loadPreset()
         case ValveTube:
         {
             useWDF = true;
+            wdfMakeupGain = 18.0f;
             wdfEngine = createWDFEngine(WDF_WestNugget, sr);
             wdfEngine2 = createWDFEngine(WDF_WestNugget, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 44);
@@ -453,6 +457,7 @@ void AnalogCharacter::loadPreset()
         case PulsetEQ:
         {
             useWDF = true;
+            wdfMakeupGain = 40.0f;
             wdfEngine = createWDFEngine(WDF_PoolDake, sr);
             wdfEngine2 = createWDFEngine(WDF_PoolDake, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 45);
@@ -478,6 +483,7 @@ void AnalogCharacter::loadPreset()
         case Console88:
         {
             useWDF = true;
+            wdfMakeupGain = 35.0f;
             wdfEngine = createWDFEngine(WDF_Never80_8, sr);
             wdfEngine2 = createWDFEngine(WDF_Never80_8, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 46);
@@ -503,6 +509,7 @@ void AnalogCharacter::loadPreset()
         case GBus:
         {
             useWDF = true;
+            wdfMakeupGain = 50.0f;
             wdfEngine = createWDFEngine(WDF_LiquidStateSolid, sr);
             wdfEngine2 = createWDFEngine(WDF_LiquidStateSolid, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 47);
@@ -547,6 +554,7 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
 
             // ===== WDF PASSIVE EQ (4-band LC circuit) =====
             x = wdf.process(x);
+            x *= wdfMakeupGain; // compensate passive insertion loss
 
             // ===== POWER SUPPLY MODULATION =====
             float absX = std::abs(x);

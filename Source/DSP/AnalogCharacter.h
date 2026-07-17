@@ -103,6 +103,7 @@ private:
     std::unique_ptr<WDFCharacterEngine> wdfEngine2;
     float wdfTolerance = 10.0f;
     bool useWDF = false;
+    float wdfMakeupGain = 10.0f;
 
     static constexpr int DelayLen = 64;
     float delayBuf[DelayLen] = { 0 };
