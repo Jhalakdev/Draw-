@@ -16,7 +16,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(JUCE)
 
 juce_add_plugin(PitchFollowEQ
-    COMPANY_NAME           "PitchFollowAudio"
+    COMPANY_NAME           "Curvex"
     PLUGIN_MANUFACTURER_CODE Draw
     PLUGIN_CODE            DrEQ
     FORMATS                AU VST3 Standalone
