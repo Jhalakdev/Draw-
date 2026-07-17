@@ -1,0 +1,188 @@
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+
+PitchFollowEQAudioProcessor::PitchFollowEQAudioProcessor()
+    : AudioProcessor(BusesProperties()
+          .withInput("Input", juce::AudioChannelSet::stereo(), true)
+          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+      spectrumAnalyzer(),
+      apvts(*this, nullptr, juce::Identifier("DrawEQ"), createParameterLayout())
+{
+    engine.getEqualizer().setEnvelope(&engine.getEnvelope());
+}
+
+PitchFollowEQAudioProcessor::~PitchFollowEQAudioProcessor() {}
+
+juce::AudioProcessorValueTreeState::ParameterLayout PitchFollowEQAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID("tracking", 1), "Spectrum", false));
+
+    layout.add(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID("bypass", 1), "Bypass EQ", false));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID("sensitivity", 1), "Sensitivity",
+        juce::NormalisableRange<float>(0.1f, 1.0f, 0.01f), 0.5f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID("trackingSpeed", 1), "Tracking Speed",
+        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f), 0.3f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID("intensity", 1), "Intensity",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.6f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID("masterGain", 1), "Output Gain",
+        juce::NormalisableRange<float>(-18.0f, 18.0f, 0.1f), 0.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID("phaseMode", 1), "Phase Mode",
+        juce::StringArray{ "Minimum", "Linear", "Natural" }, 0));
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID("msMode", 1), "M/S Mode",
+        juce::StringArray{ "Stereo", "Mid Only", "Side Only", "Left Only", "Right Only" }, 0));
+
+    return layout;
+}
+
+void PitchFollowEQAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+{
+    if (sampleRate != lastSampleRate || samplesPerBlock != lastSamplesPerBlock || !prepared)
+    {
+        engine.prepare(sampleRate, samplesPerBlock);
+        lastSampleRate = sampleRate;
+        lastSamplesPerBlock = samplesPerBlock;
+        prepared = true;
+    }
+}
+
+void PitchFollowEQAudioProcessor::releaseResources() {}
+
+void PitchFollowEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    juce::ScopedNoDenormals noDenormals;
+
+    if (!prepared)
+        prepareToPlay(getSampleRate() > 0 ? getSampleRate() : 44100.0, buffer.getNumSamples());
+
+    auto numSamples = buffer.getNumSamples();
+    auto numChannels = buffer.getNumChannels();
+
+    bool tracking = apvts.getRawParameterValue("tracking")->load() > 0.5f;
+    bool bypass = apvts.getRawParameterValue("bypass")->load() > 0.5f;
+    int phaseMode = apvts.getRawParameterValue("phaseMode")->load();
+    int msMode = apvts.getRawParameterValue("msMode")->load();
+    engine.setEnabled(tracking);
+    engine.setSensitivity(apvts.getRawParameterValue("sensitivity")->load());
+    engine.setTrackingSpeed(apvts.getRawParameterValue("trackingSpeed")->load());
+    engine.setIntensity(apvts.getRawParameterValue("intensity")->load());
+
+    if (numChannels > 0)
+        spectrumAnalyzer.pushSamples(buffer.getReadPointer(0), numSamples);
+
+    if (!bypass)
+    {
+        if (msMode == 1 || msMode == 2)
+        {
+            for (int s = 0; s < numSamples; ++s)
+            {
+                float l = buffer.getSample(0, s);
+                float r = buffer.getSample(1, s);
+                float m = (l + r) * 0.5f;
+                float side = (l - r) * 0.5f;
+                buffer.setSample(0, s, m);
+                buffer.setSample(1, s, side);
+            }
+        }
+
+        if (tracking)
+        {
+            for (int channel = 0; channel < numChannels; ++channel)
+            {
+                auto* data = buffer.getWritePointer(channel);
+                engine.process(data, numSamples);
+            }
+        }
+
+        engine.getEqualizer().setPhaseMode(phaseMode);
+        engine.getEqualizer().setEnabled(true);
+        engine.getEqualizer().flushDirty();
+
+        {
+            juce::dsp::AudioBlock<float> block(buffer);
+            engine.getEqualizer().process(block);
+        }
+
+        if (msMode == 1 || msMode == 2)
+        {
+            for (int s = 0; s < numSamples; ++s)
+            {
+                float m = buffer.getSample(0, s);
+                float side = buffer.getSample(1, s);
+                buffer.setSample(0, s, m + side);
+                buffer.setSample(1, s, m - side);
+            }
+        }
+
+        if (msMode == 3)
+            buffer.clear(1, 0, numSamples);
+        else if (msMode == 4)
+            buffer.clear(0, 0, numSamples);
+
+        float masterGain = juce::Decibels::decibelsToGain(
+            apvts.getRawParameterValue("masterGain")->load());
+        if (std::abs(masterGain - 1.0f) > 0.001f)
+            buffer.applyGain(masterGain);
+    }
+
+    if (numChannels > 0)
+    {
+        float peakL = buffer.getRMSLevel(0, 0, numSamples);
+        if (numChannels > 1)
+        {
+            float peakR = buffer.getRMSLevel(1, 0, numSamples);
+            setLevels(peakL, peakR);
+        }
+        else
+        {
+            setLevels(peakL, peakL);
+        }
+    }
+}
+
+juce::AudioProcessorEditor* PitchFollowEQAudioProcessor::createEditor()
+{
+    return new PitchFollowEQAudioProcessorEditor(*this);
+}
+
+void PitchFollowEQAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
+{
+    auto state = apvts.copyState();
+    state.addChild(engine.getEnvelope().serialize(), -1, nullptr);
+    juce::MemoryOutputStream stream(destData, false);
+    state.writeToStream(stream);
+}
+
+void PitchFollowEQAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+{
+    auto stream = juce::MemoryInputStream(data, static_cast<size_t>(sizeInBytes), false);
+    auto state = juce::ValueTree::readFromStream(stream);
+
+    if (state.isValid())
+    {
+        apvts.replaceState(state);
+        auto envTree = state.getChildWithName("Envelope");
+        if (envTree.isValid())
+            engine.getEnvelope().deserialize(envTree);
+    }
+}
+
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new PitchFollowEQAudioProcessor();
+}

@@ -1,0 +1,4 @@
+build/
+*.component/
+*.vst3/
+.DS_Store
