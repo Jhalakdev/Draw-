@@ -47,6 +47,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout PitchFollowEQAudioProcessor:
         juce::ParameterID("msMode", 1), "M/S Mode",
         juce::StringArray{ "Stereo", "Mid Only", "Side Only", "Left Only", "Right Only" }, 0));
 
+    layout.add(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID("autoGain", 1), "Auto Gain", false));
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID("character", 1), "Character",
+        juce::StringArray{ "Off", "Mister Passive", "Krane Mybiz", "West Nugget", "Pool Dake", "Never 80-8", "Liquid State Solid" }, 0));
+
     return layout;
 }
 
@@ -87,6 +94,16 @@ void PitchFollowEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     if (!bypass)
     {
+        bool autoGainOn = apvts.getRawParameterValue("autoGain")->load() > 0.5f;
+
+        std::unique_ptr<juce::AudioBuffer<float>> dryBuf;
+        if (autoGainOn)
+        {
+            dryBuf = std::make_unique<juce::AudioBuffer<float>>(numChannels, numSamples);
+            for (int ch = 0; ch < numChannels; ++ch)
+                dryBuf->copyFrom(ch, 0, buffer, ch, 0, numSamples);
+        }
+
         if (msMode == 1 || msMode == 2)
         {
             for (int s = 0; s < numSamples; ++s)
@@ -109,6 +126,8 @@ void PitchFollowEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
             }
         }
 
+        int character = apvts.getRawParameterValue("character")->load();
+        engine.getEqualizer().setCharacter(character);
         engine.getEqualizer().setPhaseMode(phaseMode);
         engine.getEqualizer().setEnabled(true);
         engine.getEqualizer().flushDirty();
@@ -133,6 +152,50 @@ void PitchFollowEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
             buffer.clear(1, 0, numSamples);
         else if (msMode == 4)
             buffer.clear(0, 0, numSamples);
+
+        if (autoGainOn && dryBuf != nullptr)
+        {
+            float dryRMS = 0.0f;
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                float chRMS = dryBuf->getRMSLevel(ch, 0, numSamples);
+                dryRMS += chRMS * chRMS;
+            }
+            dryRMS = std::sqrt(dryRMS / numChannels);
+
+            float wetRMS = 0.0f;
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                float chRMS = buffer.getRMSLevel(ch, 0, numSamples);
+                wetRMS += chRMS * chRMS;
+            }
+            wetRMS = std::sqrt(wetRMS / numChannels);
+
+            if (dryRMS > 1e-6f && wetRMS > 1e-6f)
+            {
+                float targetGain = dryRMS / wetRMS;
+                targetGain = juce::jlimit(0.251f, 3.981f, targetGain); // ±12 dB
+
+                float sr = (float)getSampleRate();
+                float attack = 1.0f - std::exp(-1.0f / (0.002f * sr));   // 2ms
+                float release = 1.0f - std::exp(-1.0f / (0.100f * sr));  // 100ms
+
+                float diff = targetGain - autoGainSmooth;
+                float coeff = (diff > 0.0f) ? attack : release;
+                autoGainSmooth += coeff * diff;
+
+                float gain = autoGainSmooth;
+                if (std::abs(gain - 1.0f) > 0.001f)
+                    buffer.applyGain(gain);
+
+                autoGainDb = juce::Decibels::gainToDecibels(gain);
+            }
+        }
+        else
+        {
+            autoGainSmooth = 1.0f;
+            autoGainDb = 0.0f;
+        }
 
         float masterGain = juce::Decibels::decibelsToGain(
             apvts.getRawParameterValue("masterGain")->load());

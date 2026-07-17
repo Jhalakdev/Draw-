@@ -50,7 +50,8 @@ private:
     LevelMeterComponent levelMeter;
 
     juce::TextButton trackingBtn { "SPECTRUM" };
-    juce::TextButton bypassBtn   { "BYP" };
+    juce::TextButton bypassBtn   { "BYPASS" };
+    juce::TextButton autoGainBtn { "AG" };
     juce::TextButton undoBtn     { "UNDO" };
     juce::TextButton redoBtn     { "REDO" };
     juce::TextButton clearBtn    { "CLEAR" };
@@ -59,6 +60,9 @@ private:
     juce::Label noteLabel;
     juce::Label statusLabel;
 
+    juce::ComboBox charCombo;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> charAttachment;
+
     juce::Label gainLabel;
     juce::Slider gainSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
@@ -66,9 +70,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> trackingAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> bypassAttachment;
 
-    juce::TextButton phaseMinBtn { "MIN" };
-    juce::TextButton phaseLinBtn { "LIN" };
-    juce::TextButton phaseNatBtn { "NAT" };
+    juce::ComboBox phaseCombo;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> phaseAttachment;
 
     juce::TextButton msStereoBtn { "ST" };
     juce::TextButton msMidBtn    { "M" };
@@ -94,7 +97,6 @@ private:
 
     void updateZonePanel(int idx);
     void setupSlider(juce::Slider& s, juce::Colour thumb);
-    void setupSegmentBtn(juce::TextButton& btn);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchFollowEQAudioProcessorEditor)
 };

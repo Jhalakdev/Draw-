@@ -2,6 +2,7 @@
 #include <JuceHeader.h>
 #include <vector>
 #include <cmath>
+#include "AnalogCharacter.h"
 
 class GainEnvelope;
 
@@ -23,6 +24,17 @@ public:
         float range = 12.0f;
     };
 
+    enum Character
+    {
+        CharOff = 0,
+        CharFormPassive = 1,
+        CharCraneSong = 2,
+        CharValveTube = 3,
+        CharPulsetEQ = 4,
+        CharConsole88 = 5,
+        CharGBus = 6
+    };
+
     void prepare(double sampleRate, int samplesPerBlock);
     void process(juce::dsp::AudioBlock<float>& block);
 
@@ -38,9 +50,15 @@ public:
     bool isSoloActive() const { return soloEnabled; }
     float getSoloFrequency() const { return soloFreq; }
 
+    AnalogCharacter& getCharacterProcessor() { return charProcessor; }
+    const AnalogCharacter& getCharacterProcessor() const { return charProcessor; }
+
     enum PhaseMode { Minimum = 0, Linear = 1, Natural = 2 };
     void setPhaseMode(int mode) { if (currentPhaseMode != mode) { currentPhaseMode = mode; markDirty(); } }
     int getPhaseMode() const { return currentPhaseMode; }
+
+    void setCharacter(int c) { charProcessor.setType((AnalogCharacter::Type)c); }
+    int getCharacter() const { return (int)charProcessor.getType(); }
 
     float getFrequencyResponse(float freq) const;
     float getCompoundResponse(float freq) const;
@@ -60,6 +78,8 @@ private:
     int currentBlockSize = 512;
     bool dirty = true;
     int currentPhaseMode = 0;
+
+    AnalogCharacter charProcessor;
 
     bool soloEnabled = false;
     float soloFreq = 1000.0f;

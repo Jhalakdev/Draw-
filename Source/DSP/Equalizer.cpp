@@ -17,6 +17,7 @@ void Equalizer::prepare(double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
     currentBlockSize = samplesPerBlock;
+    charProcessor.prepare(sampleRate, samplesPerBlock);
     int maxChannels = 2;
     delayLine.resize(maxChannels);
     for (auto& dl : delayLine)
@@ -182,6 +183,27 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
             }
         }
     }
+
+    if (charProcessor.getType() != AnalogCharacter::Off)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+        {
+            auto* data = block.getChannelPointer(static_cast<size_t>(ch));
+            charProcessor.process(data, numSamples);
+        }
+
+        if (numChannels >= 2)
+        {
+            auto* left = block.getChannelPointer(0);
+            auto* right = block.getChannelPointer(1);
+            for (int s = 0; s < numSamples; ++s)
+            {
+                float l = left[s], r = right[s];
+                left[s] += r * 0.0015f;
+                right[s] += l * 0.0015f;
+            }
+        }
+    }
 }
 
 void Equalizer::flushDirty()
@@ -316,18 +338,45 @@ void Equalizer::designLinearPhaseFIR(float* magnitude, int numBins, float* outpu
 
 void Equalizer::designNaturalPhaseFIR(float* magnitude, int numBins, float* output, int outputLen, double sampleRate)
 {
-    std::vector<float> warmMag(numBins);
-    for (int k = 0; k < numBins; ++k)
+    juce::ignoreUnused(sampleRate);
+    juce::dsp::FFT fft(FftOrder);
+    std::vector<std::complex<float>> buf(FftSize);
+
+    for (int i = 0; i < FftSize; ++i)
     {
-        float freq = static_cast<float>(k) * static_cast<float>(sampleRate) / static_cast<float>(FftSize);
-        float warmth = 0.0f;
-        if (freq < 150.0f)
-            warmth = 1.5f * (1.0f - freq / 150.0f) * (1.0f - freq / 150.0f);
-        if (freq > 8000.0f)
-            warmth = -0.5f * (freq - 8000.0f) / 12000.0f;
-        warmMag[k] = magnitude[k] + warmth;
+        int k = (i <= FftSize / 2) ? i : FftSize - i;
+        float linearMag = std::pow(10.0f, magnitude[k] / 20.0f);
+        buf[i] = std::log(std::max(1e-8f, linearMag));
     }
-    designMinimumPhaseFIR(warmMag.data(), numBins, output, outputLen, sampleRate);
+
+    fft.perform(buf.data(), buf.data(), true);
+
+    for (int i = 0; i < FftSize; ++i)
+    {
+        float w;
+        if (i == 0 || i == FftSize / 2)
+            w = 1.0f;
+        else if (i < FftSize / 2)
+            w = 1.4f;
+        else
+            w = 0.0f;
+        buf[i] *= w;
+    }
+
+    fft.perform(buf.data(), buf.data(), false);
+
+    for (int i = 0; i < FftSize; ++i)
+    {
+        float re = buf[i].real();
+        float im = buf[i].imag();
+        float expRe = std::exp(re);
+        buf[i] = std::complex<float>(expRe * std::cos(im), expRe * std::sin(im));
+    }
+
+    fft.perform(buf.data(), buf.data(), true);
+
+    for (int i = 0; i < outputLen; ++i)
+        output[i] = buf[i].real();
 }
 
 float Equalizer::getFrequencyResponse(float freq) const

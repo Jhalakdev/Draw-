@@ -32,6 +32,8 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
+    float getAutoGainDb() const { return autoGainDb; }
+
     PitchFollowEngine& getEngine() { return engine; }
     SpectrumAnalyzer& getSpectrumAnalyzer() { return spectrumAnalyzer; }
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
@@ -51,6 +53,9 @@ private:
     double lastSampleRate = 0;
     int lastSamplesPerBlock = 0;
     float leftLevel = 0.0f, rightLevel = 0.0f;
+
+    float autoGainDb = 0.0f;
+    float autoGainSmooth = 1.0f;
 
     void setLevels(float l, float r) { leftLevel = l; rightLevel = r; }
 

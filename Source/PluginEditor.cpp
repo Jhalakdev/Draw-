@@ -24,18 +24,6 @@ void PitchFollowEQAudioProcessorEditor::setupSlider(juce::Slider& s, juce::Colou
     s.setColour(juce::Slider::backgroundColourId, LF::bgPanel);
 }
 
-void PitchFollowEQAudioProcessorEditor::setupSegmentBtn(juce::TextButton& btn)
-{
-    btn.setColour(juce::TextButton::buttonColourId, LF::bgPanel);
-    btn.setColour(juce::TextButton::buttonOnColourId, LF::accentTeal.withAlpha(0.7f));
-    btn.setColour(juce::TextButton::textColourOffId, LF::textMuted);
-    btn.setColour(juce::TextButton::textColourOnId, LF::textBright);
-    btn.setClickingTogglesState(true);
-    btn.setLookAndFeel(&lnf);
-    btn.setRadioGroupId(100, juce::NotificationType::dontSendNotification);
-    addAndMakeVisible(btn);
-}
-
 PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollowEQAudioProcessor& p)
     : AudioProcessorEditor(p), processorRef(p), eqGraph(p.getEngine())
 {
@@ -53,7 +41,6 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
         btn.setColour(juce::TextButton::buttonOnColourId, bg.brighter(0.2f));
         btn.setColour(juce::TextButton::textColourOffId, textCol);
         btn.setColour(juce::TextButton::textColourOnId, textCol.brighter(0.5f));
-        btn.setClickingTogglesState(false);
         btn.setLookAndFeel(&lnf);
         addAndMakeVisible(btn);
     };
@@ -74,34 +61,47 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
         processorRef.getAPVTS().getParameter("bypass")->setValueNotifyingHost(on ? 1.0f : 0.0f);
     };
 
+    styleBtn(autoGainBtn, LF::accentTeal, LF::bgPanel);
+    autoGainBtn.setClickingTogglesState(true);
+    autoGainBtn.onClick = [this]()
+    {
+        bool on = autoGainBtn.getToggleState();
+        processorRef.getAPVTS().getParameter("autoGain")->setValueNotifyingHost(on ? 1.0f : 0.0f);
+    };
+    autoGainBtn.setTooltip("Auto Gain — maintains constant perceived level");
+
     styleBtn(undoBtn, LF::accentGold, LF::bgPanel);
     styleBtn(redoBtn, LF::accentGold, LF::bgPanel);
     styleBtn(clearBtn, LF::accentRed, LF::bgPanel);
 
-    // Phase segment
-    setupSegmentBtn(phaseMinBtn);
-    setupSegmentBtn(phaseLinBtn);
-    setupSegmentBtn(phaseNatBtn);
-    phaseMinBtn.setToggleState(true, juce::dontSendNotification);
+    phaseCombo.setEditableText(false);
+    phaseCombo.addItemList({ "Minimum Phase", "Linear Phase", "Natural Phase" }, 1);
+    phaseCombo.setSelectedItemIndex(0);
+    phaseCombo.setColour(juce::ComboBox::backgroundColourId, LF::bgPanel);
+    phaseCombo.setColour(juce::ComboBox::textColourId, LF::textBright);
+    phaseCombo.setColour(juce::ComboBox::arrowColourId, LF::textMuted);
+    phaseCombo.setColour(juce::ComboBox::outlineColourId, LF::border);
+    phaseCombo.setColour(juce::ComboBox::buttonColourId, LF::bgPanel);
+    addAndMakeVisible(phaseCombo);
+    phaseAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processorRef.getAPVTS(), "phaseMode", phaseCombo);
 
-    auto phaseClick = [this](int mode)
+    auto setupMSBtn = [this](juce::TextButton& btn)
     {
-        processorRef.getAPVTS().getParameter("phaseMode")->setValueNotifyingHost(
-            static_cast<float>(mode) / 2.0f);
-        processorRef.getEngine().getEqualizer().markDirty();
+        btn.setColour(juce::TextButton::buttonColourId, LF::bgPanel);
+        btn.setColour(juce::TextButton::buttonOnColourId, LF::accentTeal.withAlpha(0.7f));
+        btn.setColour(juce::TextButton::textColourOffId, LF::textMuted);
+        btn.setColour(juce::TextButton::textColourOnId, LF::textBright);
+        btn.setClickingTogglesState(true);
+        btn.setRadioGroupId(200, juce::NotificationType::dontSendNotification);
+        btn.setLookAndFeel(&lnf);
+        addAndMakeVisible(btn);
     };
-    phaseMinBtn.onClick = [phaseClick]() { phaseClick(0); };
-    phaseLinBtn.onClick = [phaseClick]() { phaseClick(1); };
-    phaseNatBtn.onClick = [phaseClick]() { phaseClick(2); };
-
-    // M/S segment
-    setupSegmentBtn(msStereoBtn);
-    setupSegmentBtn(msMidBtn);
-    setupSegmentBtn(msSideBtn);
-    setupSegmentBtn(msLeftBtn);
-    setupSegmentBtn(msRightBtn);
-    for (auto* btn : { &msStereoBtn, &msMidBtn, &msSideBtn, &msLeftBtn, &msRightBtn })
-        btn->setRadioGroupId(200, juce::NotificationType::dontSendNotification);
+    setupMSBtn(msStereoBtn);
+    setupMSBtn(msMidBtn);
+    setupMSBtn(msSideBtn);
+    setupMSBtn(msLeftBtn);
+    setupMSBtn(msRightBtn);
     msStereoBtn.setToggleState(true, juce::dontSendNotification);
 
     auto msClick = [this](int mode)
@@ -114,6 +114,18 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
     msSideBtn.onClick   = [msClick]() { msClick(2); };
     msLeftBtn.onClick   = [msClick]() { msClick(3); };
     msRightBtn.onClick  = [msClick]() { msClick(4); };
+
+    charCombo.setEditableText(false);
+    charCombo.addItemList({ "Off", "Mister Passive", "Krane Mybiz", "West Nugget", "Pool Dake", "Never 80-8", "Liquid State Solid" }, 1);
+    charCombo.setSelectedItemIndex(0);
+    charCombo.setColour(juce::ComboBox::backgroundColourId, LF::bgPanel);
+    charCombo.setColour(juce::ComboBox::textColourId, LF::textBright);
+    charCombo.setColour(juce::ComboBox::arrowColourId, LF::textMuted);
+    charCombo.setColour(juce::ComboBox::outlineColourId, LF::border);
+    charCombo.setColour(juce::ComboBox::buttonColourId, LF::bgPanel);
+    addAndMakeVisible(charCombo);
+    charAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processorRef.getAPVTS(), "character", charCombo);
 
     noteLabel.setText("--", juce::dontSendNotification);
     noteLabel.setColour(juce::Label::textColourId, LF::accentGold);
@@ -242,14 +254,12 @@ PitchFollowEQAudioProcessorEditor::~PitchFollowEQAudioProcessorEditor()
 {
     trackingBtn.setLookAndFeel(nullptr);
     bypassBtn.setLookAndFeel(nullptr);
+    autoGainBtn.setLookAndFeel(nullptr);
     undoBtn.setLookAndFeel(nullptr);
     redoBtn.setLookAndFeel(nullptr);
     clearBtn.setLookAndFeel(nullptr);
     zoneDynBtn.setLookAndFeel(nullptr);
     zoneDeleteBtn.setLookAndFeel(nullptr);
-    phaseMinBtn.setLookAndFeel(nullptr);
-    phaseLinBtn.setLookAndFeel(nullptr);
-    phaseNatBtn.setLookAndFeel(nullptr);
     msStereoBtn.setLookAndFeel(nullptr);
     msMidBtn.setLookAndFeel(nullptr);
     msSideBtn.setLookAndFeel(nullptr);
@@ -310,27 +320,24 @@ void PitchFollowEQAudioProcessorEditor::timerCallback()
     else
     {
         pitchLabel.setText("-- Hz", juce::dontSendNotification);
-        noteLabel.setText("--", juce::dontSendNotification);
+    noteLabel.setText("--", juce::dontSendNotification);
         noteLabel.setAlpha(0.3f);
     }
 
     bool tracking = processorRef.getAPVTS().getRawParameterValue("tracking")->load() > 0.5f;
     bool bypass = processorRef.getAPVTS().getRawParameterValue("bypass")->load() > 0.5f;
-    int phaseMode = (int)processorRef.getAPVTS().getRawParameterValue("phaseMode")->load();
+    bool autoGainOn = processorRef.getAPVTS().getRawParameterValue("autoGain")->load() > 0.5f;
     int msMode = (int)processorRef.getAPVTS().getRawParameterValue("msMode")->load();
 
     trackingBtn.setToggleState(tracking, juce::dontSendNotification);
     bypassBtn.setToggleState(bypass, juce::dontSendNotification);
-
-    trackingBtn.setButtonText("SPECTRUM");
+    autoGainBtn.setToggleState(autoGainOn, juce::dontSendNotification);
+    autoGainBtn.setColour(juce::TextButton::textColourOnId,
+                          autoGainOn ? LF::accentGold : LF::textBright);
 
     statusLabel.setText(tracking ? (bypass ? "BYPASSED" : "ACTIVE") : "IDLE", juce::dontSendNotification);
     statusLabel.setColour(juce::Label::textColourId,
                           bypass ? LF::accentRed : (tracking ? LF::accentTeal : LF::textDim));
-
-    phaseMinBtn.setToggleState(phaseMode == 0, juce::dontSendNotification);
-    phaseLinBtn.setToggleState(phaseMode == 1, juce::dontSendNotification);
-    phaseNatBtn.setToggleState(phaseMode == 2, juce::dontSendNotification);
 
     msStereoBtn.setToggleState(msMode == 0, juce::dontSendNotification);
     msMidBtn.setToggleState(msMode == 1, juce::dontSendNotification);
@@ -374,6 +381,7 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(LF::border);
     g.drawLine(0.0f, 43.5f, static_cast<float>(getWidth()), 43.5f, 1.0f);
 
+    // Brand
     g.setColour(LF::accentTeal.withAlpha(0.95f));
     g.setFont(juce::Font(15.0f).boldened());
     g.drawText("DRAW", juce::Rectangle<int>(12, 0, 52, 44),
@@ -387,6 +395,15 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(7.0f));
     g.drawText("PitchFollowAudio", juce::Rectangle<int>(12, 30, 80, 12),
                juce::Justification::centredLeft);
+
+    // Separator lines between groups
+    g.setColour(LF::border);
+    int h2 = 44;
+    g.drawVerticalLine(216, 10, h2 - 10);
+    g.drawVerticalLine(324, 10, h2 - 10);
+    g.drawVerticalLine(442, 10, h2 - 10);
+    g.drawVerticalLine(572, 10, h2 - 10);
+    g.drawVerticalLine(getWidth() - 166, 10, h2 - 10);
 }
 
 void PitchFollowEQAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
@@ -411,18 +428,20 @@ void PitchFollowEQAudioProcessorEditor::resized()
     int btnH = 20;
 
     int x = 88;
-    trackingBtn.setBounds(x, btnY, 56, btnH);
-    x += 60;
-    bypassBtn.setBounds(x, btnY, 36, btnH);
-    x += 44;
 
-    phaseMinBtn.setBounds(x, btnY, 28, btnH);
-    x += 30;
-    phaseLinBtn.setBounds(x, btnY, 28, btnH);
-    x += 30;
-    phaseNatBtn.setBounds(x, btnY, 28, btnH);
+    // Group 1: SPECTRUM + BYPASS + AUTOGAIN
+    trackingBtn.setBounds(x, btnY, 64, btnH);
+    x += 68;
+    bypassBtn.setBounds(x, btnY, 52, btnH);
+    x += 56;
+    autoGainBtn.setBounds(x, btnY, 28, btnH);
     x += 36;
 
+    // Group 2: Phase combo box
+    phaseCombo.setBounds(x, btnY, 102, btnH);
+    x += 110;
+
+    // Group 3: M/S buttons
     msStereoBtn.setBounds(x, btnY, 24, btnH);
     x += 26;
     msMidBtn.setBounds(x, btnY, 20, btnH);
@@ -434,26 +453,32 @@ void PitchFollowEQAudioProcessorEditor::resized()
     msRightBtn.setBounds(x, btnY, 20, btnH);
     x += 28;
 
-    undoBtn.setBounds(x, btnY, 34, btnH);
-    x += 36;
-    redoBtn.setBounds(x, btnY, 34, btnH);
-    x += 36;
-    clearBtn.setBounds(x, btnY, 34, btnH);
+    // Group 4: Undo/Redo/Clear
+    undoBtn.setBounds(x, btnY, 38, btnH);
     x += 42;
+    redoBtn.setBounds(x, btnY, 38, btnH);
+    x += 42;
+    clearBtn.setBounds(x, btnY, 38, btnH);
+    x += 50;
 
-    // Pitch info on the right side
+    charCombo.setBounds(x, btnY, 130, btnH);
+    x += 140;
+
+    // Pitch info right side
     auto pitchArea = header.removeFromRight(160);
     int px = pitchArea.getX();
     noteLabel.setBounds(px, 4, 44, 34);
     pitchLabel.setBounds(px + 44, 6, 70, 14);
     statusLabel.setBounds(px + 44, 20, 70, 12);
 
+    // Sidebar
     auto sidebar = area.removeFromRight(72);
     auto meterArea = sidebar.removeFromTop(sidebar.getHeight() * 0.65f);
     levelMeter.setBounds(meterArea.reduced(2));
     gainSlider.setBounds(sidebar.withTrimmedTop(0).reduced(4));
     gainLabel.setBounds(sidebar.getX() - 4, sidebar.getY() - 12, 72, 10);
 
+    // Zone strip + graph
     int zoneH = 36;
     bool showZone = zonePanel.isVisible();
     auto graphArea = area.reduced(6, 6);
@@ -469,9 +494,9 @@ void PitchFollowEQAudioProcessorEditor::resized()
 
         int sliderY = 4;
         int sliderH = bottomStrip.getHeight() - 8;
-        int sliderW = 68;
+        int sliderW = 62;
         int labelW = 18;
-        int gap = 4;
+        int gap = 3;
         int sx = zx + 90;
 
         auto place = [&](juce::Slider& s, juce::Label& l)

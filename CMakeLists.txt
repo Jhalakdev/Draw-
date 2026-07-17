@@ -38,6 +38,7 @@ target_sources(PitchFollowEQ
         Source/DSP/Equalizer.cpp
         Source/DSP/PitchDetector.cpp
         Source/DSP/PitchFollowEngine.cpp
+        Source/DSP/AnalogCharacter.cpp
         Source/UI/EQGraphComponent.cpp
         Source/UI/SpectrumAnalyzer.cpp
 )
