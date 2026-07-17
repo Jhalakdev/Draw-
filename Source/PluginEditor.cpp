@@ -290,6 +290,16 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(LF::accentGold.withAlpha(0.55f));
     g.fillRect(526, 0, getWidth() - 526 - 176, 2);
 
+    // ---- Colored accent bars at bottom of each section ----
+    g.setColour(LF::accentTeal.withAlpha(0.55f));
+    g.fillRect(80, 49, 146, 2);
+    g.setColour(LF::accentGold.withAlpha(0.35f));
+    g.fillRect(230, 49, 222, 2);
+    g.setColour(LF::accentTeal.withAlpha(0.35f));
+    g.fillRect(456, 49, 66, 2);
+    g.setColour(LF::accentGold.withAlpha(0.30f));
+    g.fillRect(526, 49, getWidth() - 526 - 176, 2);
+
     // ---- Short separator lines aligned with button row ----
     int sepTop = 14, sepBot = 44;
     g.setColour(LF::border);
