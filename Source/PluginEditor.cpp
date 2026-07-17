@@ -127,6 +127,21 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
     charAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         processorRef.getAPVTS(), "character", charCombo);
 
+    charBlendSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    charBlendSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    charBlendSlider.setColour(juce::Slider::trackColourId, LF::border);
+    charBlendSlider.setColour(juce::Slider::thumbColourId, LF::accentGold);
+    charBlendSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel);
+    addAndMakeVisible(charBlendSlider);
+    charBlendAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        processorRef.getAPVTS(), "charBlend", charBlendSlider);
+
+    charBlendLabel.setText("BLEND", juce::dontSendNotification);
+    charBlendLabel.setColour(juce::Label::textColourId, LF::textDim);
+    charBlendLabel.setFont(7.0f);
+    charBlendLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(charBlendLabel);
+
     noteLabel.setText("--", juce::dontSendNotification);
     noteLabel.setColour(juce::Label::textColourId, LF::accentGold);
     noteLabel.setFont(24.0f);
@@ -258,6 +273,7 @@ PitchFollowEQAudioProcessorEditor::~PitchFollowEQAudioProcessorEditor()
     undoBtn.setLookAndFeel(nullptr);
     redoBtn.setLookAndFeel(nullptr);
     clearBtn.setLookAndFeel(nullptr);
+    charBlendSlider.setLookAndFeel(nullptr);
     zoneDynBtn.setLookAndFeel(nullptr);
     zoneDeleteBtn.setLookAndFeel(nullptr);
     msStereoBtn.setLookAndFeel(nullptr);
@@ -456,8 +472,11 @@ void PitchFollowEQAudioProcessorEditor::resized()
     clearBtn.setBounds(x, btnY, 38, btnH);
     x += 50;
 
-    charCombo.setBounds(x, btnY, 130, btnH);
-    x += 140;
+    charCombo.setBounds(x, btnY, 108, btnH);
+    x += 112;
+    charBlendSlider.setBounds(x, btnY + 2, 48, btnH - 4);
+    charBlendLabel.setBounds(x, btnY - 8, 48, 10);
+    x += 56;
 
     // Pitch info right side
     auto pitchArea = header.removeFromRight(160);

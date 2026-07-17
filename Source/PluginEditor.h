@@ -62,6 +62,9 @@ private:
 
     juce::ComboBox charCombo;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> charAttachment;
+    juce::Slider charBlendSlider;
+    juce::Label charBlendLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> charBlendAttachment;
 
     juce::Label gainLabel;
     juce::Slider gainSlider;

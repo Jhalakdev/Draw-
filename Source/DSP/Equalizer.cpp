@@ -202,12 +202,11 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
         }
 
         // Wet/dry blend: character is subtle coloration on top of EQ curve
-        constexpr float wetMix = 0.35f;
         for (int ch = 0; ch < numChannels; ++ch)
         {
             auto* data = block.getChannelPointer(static_cast<size_t>(ch));
             for (int s = 0; s < numSamples; ++s)
-                data[s] = dryBuf[ch][s] * (1.0f - wetMix) + data[s] * wetMix;
+                data[s] = dryBuf[ch][s] * (1.0f - charBlend) + data[s] * charBlend;
         }
 
         if (numChannels >= 2)

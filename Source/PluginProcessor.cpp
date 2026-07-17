@@ -50,6 +50,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout PitchFollowEQAudioProcessor:
     layout.add(std::make_unique<juce::AudioParameterBool>(
         juce::ParameterID("autoGain", 1), "Auto Gain", false));
 
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID("charBlend", 1), "Character Blend",
+        juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 35.0f));
+
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         juce::ParameterID("character", 1), "Character",
         juce::StringArray{ "Off", "Mister Passive", "Krane Mybiz", "West Nugget", "Pool Dake", "Never 80-8", "Liquid State Solid" }, 0));
@@ -128,6 +132,7 @@ void PitchFollowEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
         int character = apvts.getRawParameterValue("character")->load();
         engine.getEqualizer().setCharacter(character);
+        engine.getEqualizer().setCharBlend(apvts.getRawParameterValue("charBlend")->load() / 100.0f);
         engine.getEqualizer().setPhaseMode(phaseMode);
         engine.getEqualizer().setEnabled(true);
         engine.getEqualizer().flushDirty();

@@ -58,6 +58,7 @@ public:
     int getPhaseMode() const { return currentPhaseMode; }
 
     void setCharacter(int c) { charProcessor.setType((AnalogCharacter::Type)c); }
+    void setCharBlend(float b) { charBlend = b; }
     int getCharacter() const { return (int)charProcessor.getType(); }
 
     float getFrequencyResponse(float freq) const;
@@ -78,6 +79,8 @@ private:
     int currentBlockSize = 512;
     bool dirty = true;
     int currentPhaseMode = 0;
+
+    float charBlend = 0.35f;
 
     AnalogCharacter charProcessor;
 
