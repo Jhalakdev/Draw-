@@ -87,10 +87,10 @@ private:
     std::vector<Zone> zones;
     bool zonesDirty = true;
 
-    static constexpr int IrLen = 512;
-    static constexpr int FftOrder = 11;
+    static constexpr int IrLen = 256;
+    static constexpr int FftOrder = 10;
     static constexpr int FftSize = 1 << FftOrder;
-    static constexpr int CrossfadeLen = 256;
+    static constexpr int CrossfadeLen = 128;
 
     std::vector<float> ir;
     std::vector<float> oldIr;
