@@ -4,7 +4,7 @@
 #include "UI/EQGraphComponent.h"
 #include "UI/LevelMeterComponent.h"
 
-#define BUILD_VERSION "v25"
+#define BUILD_VERSION "v26"
 
 class PitchFollowEQLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -67,7 +67,6 @@ private:
     juce::Slider charBlendSlider;
     juce::Label charBlendLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> charBlendAttachment;
-    juce::Label emulationLabel;
 
     juce::Label gainLabel;
     juce::Slider gainSlider;

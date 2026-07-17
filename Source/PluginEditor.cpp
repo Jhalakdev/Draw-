@@ -120,16 +120,10 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
         processorRef.getAPVTS(), "charBlend", charBlendSlider);
 
     charBlendLabel.setText("BLEND", juce::dontSendNotification);
-    charBlendLabel.setColour(juce::Label::textColourId, LF::textDim);
+    charBlendLabel.setColour(juce::Label::textColourId, LF::textBright);
     charBlendLabel.setFont(8.0f);
     charBlendLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(charBlendLabel);
-
-    emulationLabel.setText("EMULATION", juce::dontSendNotification);
-    emulationLabel.setColour(juce::Label::textColourId, LF::textDim);
-    emulationLabel.setFont(8.0f);
-    emulationLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(emulationLabel);
 
     charBlendSlider.setColour(juce::Slider::trackColourId, LF::accentGold.withAlpha(0.4f));
     charBlendSlider.setColour(juce::Slider::thumbColourId, LF::accentGold);
@@ -172,6 +166,7 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
     {
         auto& env = processorRef.getEngine().getEnvelope();
         env.undo();
+        env.markAudioDirty();
         eqGraph.markResponseDirty();
         eqGraph.repaint();
     };
@@ -179,6 +174,7 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
     {
         auto& env = processorRef.getEngine().getEnvelope();
         env.redo();
+        env.markAudioDirty();
         eqGraph.markResponseDirty();
         eqGraph.repaint();
     };
@@ -187,6 +183,7 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
         auto& env = processorRef.getEngine().getEnvelope();
         env.pushUndo();
         env.clear();
+        env.markAudioDirty();
         eqGraph.markResponseDirty();
         eqGraph.repaint();
     };
@@ -284,10 +281,29 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.drawText("Draw EQ " BUILD_VERSION, juce::Rectangle<int>(12, 22, 100, 16),
                juce::Justification::centredLeft);
 
-    // Separator lines between groups
+    // Group separator lines + labels
     g.setColour(LF::border);
     int h2 = 44;
-    g.drawVerticalLine(216, 10, h2 - 10);
+    g.drawVerticalLine(78, 10, h2 - 10);
+    g.setColour(LF::textDim);
+    g.setFont(juce::Font(6.0f));
+    g.drawText("TRACK", 82, 0, 60, 10, juce::Justification::centred);
+    g.setColour(LF::border);
+    g.drawVerticalLine(220, 10, h2 - 10);
+    g.setColour(LF::textDim);
+    g.setFont(juce::Font(6.0f));
+    g.drawText("EMULATION", 224, 0, 200, 10, juce::Justification::centredLeft);
+    g.setColour(LF::border);
+    g.drawVerticalLine(436, 10, h2 - 10);
+    g.setColour(LF::textDim);
+    g.setFont(juce::Font(6.0f));
+    g.drawText("GAIN", 440, 0, 60, 10, juce::Justification::centred);
+    g.setColour(LF::border);
+    g.drawVerticalLine(506, 10, h2 - 10);
+    g.setColour(LF::textDim);
+    g.setFont(juce::Font(6.0f));
+    g.drawText("HISTORY", 510, 0, 200, 10, juce::Justification::centredLeft);
+    g.setColour(LF::border);
     g.drawVerticalLine(getWidth() - 176, 10, h2 - 10);
 }
 
@@ -323,7 +339,6 @@ void PitchFollowEQAudioProcessorEditor::resized()
 
     // Group 2: Emulation combo + BLEND (bigger)
     charCombo.setBounds(x, btnY, 128, btnH);
-    emulationLabel.setBounds(x, btnY - 10, 128, 10);
     x += 132;
     charBlendSlider.setBounds(x, btnY - 2, 72, btnH + 8);
     charBlendLabel.setBounds(x, btnY - 14, 72, 12);
