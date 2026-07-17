@@ -28,8 +28,7 @@ void EQGraphComponent::timerCallback()
         responsePathDirty = true;
     }
 
-    if (responsePathDirty)
-        repaint();
+    repaint();
 }
 
 void EQGraphComponent::paint(juce::Graphics& g)
