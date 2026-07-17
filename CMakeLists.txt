@@ -16,6 +16,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(JUCE)
 
 juce_add_plugin(PitchFollowEQ
+    BUNDLE_ID               "com.Curvex.DrawEQ"
     COMPANY_NAME           "Curvex"
     PLUGIN_MANUFACTURER_CODE Draw
     PLUGIN_CODE            DrEQ
@@ -63,7 +64,7 @@ target_link_libraries(PitchFollowEQ
 )
 
 set_target_properties(PitchFollowEQ PROPERTIES
-    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.pitchfollow.PitchFollowEQ"
+    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.curvex.DrawEQ"
     XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "11.0"
     XCODE_ATTRIBUTE_BUILD_LIBRARY_FOR_DISTRIBUTION "YES"
 )
