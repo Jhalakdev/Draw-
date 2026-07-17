@@ -1,7 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
-#include "../DSP/PitchFollowEngine.h"
-#include "../DSP/FFTAnalyzer.h"
+#include "../../Source/DSP/PitchFollowEngine.h"
+#include "../../Source/DSP/FFTAnalyzer.h"
 
 class DrawEQSimpleProcessor : public juce::AudioProcessor
 {

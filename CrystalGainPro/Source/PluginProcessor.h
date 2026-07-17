@@ -1,16 +1,17 @@
 #pragma once
 #include <JuceHeader.h>
-#include "../Shared/GainProcessor.h"
-#include "../Shared/PhaseProcessor.h"
-#include "../Shared/MonoProcessor.h"
-#include "../Shared/BalanceProcessor.h"
-#include "../UI/LevelMeterComponent.h"
+#include "../../Shared/GainProcessor.h"
+#include "../../Shared/PhaseProcessor.h"
+#include "../../Shared/MonoProcessor.h"
+#include "../../Shared/BalanceProcessor.h"
+#include "../../Source/DSP/AnalogCharacter.h"
+#include "../../Source/UI/LevelMeterComponent.h"
 
-class CrystalGainProcessor : public juce::AudioProcessor
+class CrystalGainProProcessor : public juce::AudioProcessor
 {
 public:
-    CrystalGainProcessor();
-    ~CrystalGainProcessor() override;
+    CrystalGainProProcessor();
+    ~CrystalGainProProcessor() override;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -18,7 +19,7 @@ public:
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
-    const juce::String getName() const override { return "Crystal Gain"; }
+    const juce::String getName() const override { return "Crystal Gain Pro"; }
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
@@ -34,6 +35,7 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
+    AnalogCharacter& getCharacter() { return character; }
     float getLeftLevel() const { return leftLevel; }
     float getRightLevel() const { return rightLevel; }
     float getGainDb() const { return currentGainDb; }
@@ -46,11 +48,12 @@ private:
     PhaseProcessor phaseProc;
     MonoProcessor monoProc;
     BalanceProcessor balanceProc;
+    AnalogCharacter character;
 
     double sr = 44100.0;
     float leftLevel = 0.0f, rightLevel = 0.0f, currentGainDb = 0.0f;
     bool prepared = false;
     void setLevels(float l, float r) { leftLevel = l; rightLevel = r; }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CrystalGainProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CrystalGainProProcessor)
 };

@@ -1,8 +1,8 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "../UI/EQGraphComponent.h"
-#include "../UI/LevelMeterComponent.h"
+#include "../../Source/UI/EQGraphComponent.h"
+#include "../../Source/UI/LevelMeterComponent.h"
 
 #define BUILD_VERSION "v1"
 

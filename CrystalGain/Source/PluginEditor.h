@@ -1,16 +1,14 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "../UI/LevelMeterComponent.h"
+#include "../../Source/UI/LevelMeterComponent.h"
 
-class CrystalGainProLF : public juce::LookAndFeel_V4
+class CrystalGainLF : public juce::LookAndFeel_V4
 {
 public:
     static const juce::Colour bgDark;
     static const juce::Colour bgPanel;
     static const juce::Colour accentTeal;
-    static const juce::Colour accentGold;
-    static const juce::Colour accentRed;
     static const juce::Colour textBright;
     static const juce::Colour textMuted;
     static const juce::Colour textDim;
@@ -28,33 +26,43 @@ public:
         g.setColour(juce::Colour(0xFF2A2A44));
         g.drawRoundedRectangle(bounds, 4.0f, 1.0f);
     }
+
+    void drawRotarySlider(juce::Graphics& g, int x, int y, int w, int h, float pos,
+                          float startAngle, float endAngle, juce::Slider&) override
+    {
+        auto cx = x + w * 0.5f, cy = y + h * 0.5f, r = jmin(w, h) * 0.4f;
+        g.setColour(bgPanel.brighter(0.08f));
+        g.fillEllipse(cx - r, cy - r, r * 2, r * 2);
+        g.setColour(border);
+        g.drawEllipse(cx - r, cy - r, r * 2, r * 2, 1.0f);
+        float angle = startAngle + pos * (endAngle - startAngle);
+        g.setColour(accentTeal);
+        g.drawLine(cx, cy, cx + r * 0.85f * std::cos(angle), cy + r * 0.85f * std::sin(angle), 2.0f);
+    }
 };
 
-class CrystalGainProEditor : public juce::AudioProcessorEditor, public juce::Timer
+class CrystalGainEditor : public juce::AudioProcessorEditor, public juce::Timer
 {
 public:
-    CrystalGainProEditor(CrystalGainProProcessor& p);
-    ~CrystalGainProEditor() override;
+    CrystalGainEditor(CrystalGainProcessor& p);
+    ~CrystalGainEditor() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
     void timerCallback() override;
 
 private:
-    CrystalGainProProcessor& processorRef;
-    CrystalGainProLF laf;
+    CrystalGainProcessor& processorRef;
+    CrystalGainLF laf;
 
-    juce::ComboBox charCombo;
-    juce::Slider gainFader, colorFader;
-    juce::Label gainLabel, colorLabel, valueLabel, titleLabel, colorValLabel;
+    juce::Slider gainKnob;
+    juce::Label gainLabel, valueLabel;
     juce::TextButton phaseBtn{"\u2205"}, monoBtn{"M"};
-    juce::Slider balanceSlider;
     juce::Label balanceLabel;
+    juce::Slider balanceSlider;
     LevelMeterComponent levelMeter;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> charAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttach;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> colorAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> phaseAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> monoAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> balanceAttach;

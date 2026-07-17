@@ -105,8 +105,8 @@ juce_add_plugin(DrawEQSimple
 
 target_sources(DrawEQSimple
     PRIVATE
-        Source/DrawEQSimple/PluginProcessor.cpp
-        Source/DrawEQSimple/PluginEditor.cpp
+        DrawEQ/Source/PluginProcessor.cpp
+        DrawEQ/Source/PluginEditor.cpp
         Source/DSP/Equalizer.cpp
         Source/DSP/PitchDetector.cpp
         Source/DSP/PitchFollowEngine.cpp
@@ -161,8 +161,8 @@ juce_add_plugin(CrystalGain
 
 target_sources(CrystalGain
     PRIVATE
-        Source/CrystalGain/PluginProcessor.cpp
-        Source/CrystalGain/PluginEditor.cpp
+        CrystalGain/Source/PluginProcessor.cpp
+        CrystalGain/Source/PluginEditor.cpp
 )
 
 target_compile_definitions(CrystalGain
@@ -210,8 +210,8 @@ juce_add_plugin(CrystalGainPro
 
 target_sources(CrystalGainPro
     PRIVATE
-        Source/CrystalGainPro/PluginProcessor.cpp
-        Source/CrystalGainPro/PluginEditor.cpp
+        CrystalGainPro/Source/PluginProcessor.cpp
+        CrystalGainPro/Source/PluginEditor.cpp
         ${SHARED_DSP_SOURCES}
 )
 
