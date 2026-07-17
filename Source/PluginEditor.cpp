@@ -266,21 +266,21 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(LF::bgPanel);
     g.fillRect(header);
 
-    // Section background fills
+    // Section background fills — alternating shades to visually separate groups
     auto baseDark = LF::bgPanel;
-    auto sec1 = baseDark.brighter(0.04f);
-    auto sec2 = baseDark;
-    auto sec3 = baseDark.brighter(0.02f);
+    auto sec1 = baseDark.brighter(0.06f);
+    auto sec2 = baseDark.brighter(0.01f);
+    auto sec3 = baseDark.brighter(0.04f);
     auto sec4 = baseDark;
 
     g.setColour(sec1);
-    g.fillRect(80, 0, 140, 52);
+    g.fillRect(80, 0, 116, 52);
     g.setColour(sec2);
-    g.fillRect(228, 0, 208, 52);
+    g.fillRect(200, 0, 218, 52);
     g.setColour(sec3);
-    g.fillRect(440, 0, 66, 52);
+    g.fillRect(422, 0, 64, 52);
     g.setColour(sec4);
-    g.fillRect(510, 0, getWidth() - 510 - 176, 52);
+    g.fillRect(490, 0, getWidth() - 490 - 176, 52);
 
     g.setColour(LF::border);
     g.drawLine(0.0f, 51.5f, static_cast<float>(getWidth()), 51.5f, 1.0f);
@@ -299,26 +299,17 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     int hh = 52;
     g.setColour(LF::border);
     g.drawVerticalLine(78, 0, hh);
-    g.setColour(LF::textMuted);
-    g.setFont(juce::Font(10.0f).boldened());
-    g.drawText("TRACK", 82, 4, 60, 12, juce::Justification::centredLeft);
-    g.setColour(LF::border);
-    g.drawVerticalLine(220, 0, hh);
-    g.setColour(LF::textMuted);
-    g.setFont(juce::Font(10.0f).boldened());
-    g.drawText("EMULATION", 234, 4, 180, 12, juce::Justification::centredLeft);
-    g.setColour(LF::border);
-    g.drawVerticalLine(436, 0, hh);
-    g.setColour(LF::textMuted);
-    g.setFont(juce::Font(10.0f).boldened());
-    g.drawText("AUTO GAIN", 446, 4, 56, 12, juce::Justification::centredLeft);
-    g.setColour(LF::border);
-    g.drawVerticalLine(506, 0, hh);
-    g.setColour(LF::textMuted);
-    g.setFont(juce::Font(10.0f).boldened());
-    g.drawText("HISTORY", 516, 4, 80, 12, juce::Justification::centredLeft);
-    g.setColour(LF::border);
+    g.drawVerticalLine(198, 0, hh);
+    g.drawVerticalLine(420, 0, hh);
+    g.drawVerticalLine(488, 0, hh);
     g.drawVerticalLine(getWidth() - 176, 0, hh);
+
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(10.0f).boldened());
+    g.drawText("TRACK", 86, 4, 60, 12, juce::Justification::centredLeft);
+    g.drawText("EMULATION", 206, 4, 180, 12, juce::Justification::centredLeft);
+    g.drawText("AUTO GAIN", 428, 4, 54, 12, juce::Justification::centredLeft);
+    g.drawText("HISTORY", 496, 4, 80, 12, juce::Justification::centredLeft);
 }
 
 void PitchFollowEQAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
@@ -342,36 +333,26 @@ void PitchFollowEQAudioProcessorEditor::resized()
     int btnY = 16;
     int btnH = 22;
 
-    // ===== HEADER =====
-    int x = 80;
+    // ===== HEADER — groups mapped to paint section boundaries =====
 
-    // Group 1: FUNDAMENTAL + BYPASS
-    trackingBtn.setBounds(x, btnY, 76, btnH);
-    x += 80;
-    bypassBtn.setBounds(x, btnY, 52, btnH);
-    x += 64;
+    // Group 1: TRACKING (80-196)
+    trackingBtn.setBounds(80, btnY, 68, btnH);
+    bypassBtn.setBounds(152, btnY, 42, btnH);
 
-    // Group 2: Emulation combo + BLEND (bigger)
-    charCombo.setBounds(x, btnY, 128, btnH);
-    x += 132;
-    charBlendSlider.setBounds(x, btnY - 2, 72, btnH + 8);
-    charBlendLabel.setBounds(x, btnY - 14, 72, 12);
-    x += 80;
+    // Group 2: EMULATION (200-418)
+    charCombo.setBounds(200, btnY, 128, btnH);
+    charBlendSlider.setBounds(336, btnY - 2, 80, btnH + 8);
+    charBlendLabel.setBounds(336, btnY - 14, 80, 12);
 
-    // Group 3: AUTO GAIN
-    autoGainBtn.setBounds(x, btnY, 64, btnH);
-    x += 72;
+    // Group 3: AUTO GAIN (422-486)
+    autoGainBtn.setBounds(422, btnY, 62, btnH);
 
-    // Group 4: Undo/Redo/Clear — wider, shifted 30% right
-    x += 50;
-    undoBtn.setBounds(x, btnY, 44, btnH);
-    x += 48;
-    redoBtn.setBounds(x, btnY, 44, btnH);
-    x += 48;
-    clearBtn.setBounds(x, btnY, 44, btnH);
-    x += 52;
+    // Group 4: HISTORY (490-784) — evenly spread across 294px
+    undoBtn.setBounds(526, btnY, 50, btnH);
+    redoBtn.setBounds(612, btnY, 50, btnH);
+    clearBtn.setBounds(698, btnY, 50, btnH);
 
-    // Pitch info right side
+    // Pitch info right side (784-960, 176px)
     auto pitchArea = header.removeFromRight(148);
     int px = pitchArea.getX();
     noteLabel.setBounds(px, 6, 44, 34);
