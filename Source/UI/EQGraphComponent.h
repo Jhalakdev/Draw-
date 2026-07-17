@@ -19,9 +19,6 @@ public:
 
     void markResponseDirty() { responsePathDirty = true; repaint(); }
 
-    int getSelectedZone() const { return selectedZone; }
-    void setSelectedZone(int idx) { selectedZone = idx; repaint(); }
-
     float getXForFrequency(float freq) const;
     float getFrequencyForX(float x) const;
     float getYForGain(float gain) const;
@@ -37,21 +34,16 @@ private:
     FFTAnalyzer& fftAnalyzer;
 
     float graphX = 0.0f, graphY = 0.0f, graphW = 0.0f, graphH = 0.0f;
-    int selectedZone = -1;
-    int draggingZoneEdge = -1;
-    bool draggingEdgeLeft = false;
 
-    enum class DragMode { None, Draw, Erase, Solo, ZoneEdge, ZoneDrag };
+    enum class DragMode { None, Draw, Erase, Solo };
     DragMode dragMode = DragMode::None;
 
     void drawGrid(juce::Graphics& g);
     void drawSpectrum(juce::Graphics& g);
     void drawEnvelope(juce::Graphics& g);
     void drawResponse(juce::Graphics& g);
-    void drawZones(juce::Graphics& g);
     void drawTrackingDot(juce::Graphics& g);
     void drawSoloMarker(juce::Graphics& g);
-    void drawPlusIcons(juce::Graphics& g);
 
     static constexpr int NumSpectrumBins = 256;
     std::array<float, NumSpectrumBins> spectrumData{};
@@ -64,5 +56,4 @@ private:
     juce::Path cachedResponsePath;
     bool responsePathDirty = true;
     bool soloDragActive = false;
-    int hoveredPlusIcon = -1;
 };

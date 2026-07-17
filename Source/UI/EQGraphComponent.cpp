@@ -28,7 +28,8 @@ void EQGraphComponent::timerCallback()
         responsePathDirty = true;
     }
 
-    repaint();
+    if (responsePathDirty)
+        repaint();
 }
 
 void EQGraphComponent::paint(juce::Graphics& g)
@@ -51,13 +52,11 @@ void EQGraphComponent::paint(juce::Graphics& g)
     g.drawRoundedRectangle(bounds.toFloat(), 4.0f, 1.0f);
 
     drawGrid(g);
-    drawZones(g);
     drawSoloMarker(g);
     drawSpectrum(g);
     drawEnvelope(g);
     drawResponse(g);
     drawTrackingDot(g);
-    drawPlusIcons(g);
 
     if (drawTrail.size() > 1)
     {
@@ -119,26 +118,28 @@ void EQGraphComponent::paint(juce::Graphics& g)
     auto& eq = engine.getEqualizer();
     g.setColour(juce::Colour(0xFF3A3A58));
     g.setFont(juce::Font(8.0f));
-    juce::String dynHint;
-    if (eq.getNumZones() > 0)
-        dynHint = "  ·  Click zone to select  ·  Drag edges to resize";
-    g.drawText("Draw: click  ·  Erase: Shift+click  ·  Solo: right-click/hold  ·  + to add zone" + dynHint,
+    g.drawText("Draw: click  ·  Erase: Shift+click  ·  Solo: right-click/hold",
                juce::Rectangle<int>(static_cast<int>(graphX), static_cast<int>(graphY + graphH) + 22, 500, 12),
                juce::Justification::centredLeft, false);
+}
 
-    g.setColour(juce::Colour(0xFF3A3A58));
-    g.setFont(juce::Font(8.0f));
-    int nDyn = eq.getNumZones();
-    juce::String dynStatus;
-    for (int i = 0; i < nDyn; ++i)
-    {
-        if (i > 0) dynStatus += "  ";
-        const auto& z = eq.getZones()[i];
-        dynStatus += (z.enabled ? "DYN" : "OFF") + juce::String(i + 1);
-    }
-    g.drawText(dynStatus,
-               juce::Rectangle<int>(static_cast<int>(graphX + graphW) - 200, static_cast<int>(graphY + graphH) + 22, 200, 12),
-               juce::Justification::centredRight, false);
+void EQGraphComponent::drawSoloMarker(juce::Graphics& g)
+{
+    auto& eq = engine.getEqualizer();
+    if (!eq.isSoloActive()) return;
+
+    float freq = eq.getSoloFrequency();
+    float x = getXForFrequency(freq);
+    if (x < graphX || x > graphX + graphW) return;
+
+    g.setColour(juce::Colour(0xFF00E5B8).withAlpha(0.1f));
+    g.fillRect(x - 20.0f, graphY, 40.0f, graphH);
+    g.setColour(juce::Colour(0xFF00E5B8).withAlpha(0.5f));
+    g.drawVerticalLine(static_cast<int>(x), graphY, graphY + graphH);
+    g.setColour(juce::Colour(0xFF00E5B8).withAlpha(0.9f));
+    g.setFont(juce::Font(8.0f).boldened());
+    g.drawText("SOLO", juce::Rectangle<int>(static_cast<int>(x) - 14, static_cast<int>(graphY) - 12, 28, 10),
+               juce::Justification::centred, false);
 }
 
 void EQGraphComponent::drawGrid(juce::Graphics& g)
@@ -161,81 +162,6 @@ void EQGraphComponent::drawGrid(juce::Graphics& g)
     g.setColour(juce::Colour(0xFF3A3A5A));
     float zeroY = getYForGain(0.0f);
     g.drawHorizontalLine(static_cast<int>(zeroY), graphX, graphX + graphW);
-}
-
-void EQGraphComponent::drawZones(juce::Graphics& g)
-{
-    auto& eq = engine.getEqualizer();
-    int n = eq.getNumZones();
-    for (int i = 0; i < n; ++i)
-    {
-        const auto& z = eq.getZones()[i];
-        float x1 = getXForFrequency(z.startFreq);
-        float x2 = getXForFrequency(z.endFreq);
-        if (x2 < graphX || x1 > graphX + graphW) continue;
-        x1 = juce::jmax(graphX, x1);
-        x2 = juce::jmin(graphX + graphW, x2);
-
-        bool sel = (i == selectedZone);
-        auto bandCol = z.enabled
-            ? juce::Colour(0xFFFF6B6B).withAlpha(sel ? 0.15f : 0.08f)
-            : juce::Colour(0xFF555570).withAlpha(sel ? 0.10f : 0.05f);
-
-        g.setColour(bandCol);
-        g.fillRect(x1, graphY, x2 - x1, graphH);
-
-        if (z.enabled)
-        {
-            g.setColour(juce::Colour(0xFFFF6B6B).withAlpha(sel ? 0.5f : 0.25f));
-            g.drawVerticalLine(static_cast<int>(x1), graphY, graphY + graphH);
-            g.drawVerticalLine(static_cast<int>(x2), graphY, graphY + graphH);
-        }
-
-        if (sel)
-        {
-            g.setColour(juce::Colour(0xFF00E5B8).withAlpha(0.4f));
-            g.drawRoundedRectangle(x1 - 1, graphY - 1, x2 - x1 + 2, graphH + 2, 2.0f, 1.5f);
-        }
-
-        char buf[32];
-        std::snprintf(buf, sizeof(buf), "Z%d %s", i + 1, z.enabled ? "" : "(OFF)");
-        g.setFont(juce::Font(8.0f).boldened());
-        g.setColour(juce::Colour(0xFFFF6B6B).withAlpha(sel ? 0.8f : 0.4f));
-        g.drawText(buf, juce::Rectangle<int>(static_cast<int>(x1) + 4, static_cast<int>(graphY) + 4,
-                                              static_cast<int>(x2 - x1) - 8, 12),
-                   juce::Justification::centredLeft, false);
-
-        if (z.enabled)
-        {
-            juce::String info = "TH " + juce::String(z.threshold, 0) + "  R " + juce::String(z.ratio, 1) + ":1";
-            g.setFont(7.0f);
-            g.setColour(juce::Colour(0xFFFF6B6B).withAlpha(0.3f));
-            g.drawText(info, juce::Rectangle<int>(static_cast<int>(x1) + 4, static_cast<int>(graphY) + 16,
-                                                   static_cast<int>(x2 - x1) - 8, 10),
-                       juce::Justification::centredLeft, false);
-        }
-    }
-}
-
-void EQGraphComponent::drawPlusIcons(juce::Graphics& g)
-{
-    float iconY = graphY + graphH + 14.0f;
-    float iconSize = 14.0f;
-
-    float plusPositions[] = { 100, 200, 500, 1000, 2000, 5000, 10000 };
-    for (int i = 0; i < 7; ++i)
-    {
-        float x = getXForFrequency(plusPositions[i]);
-        if (x < graphX || x > graphX + graphW) continue;
-
-        bool hover = (i == hoveredPlusIcon);
-        g.setColour(juce::Colour(0xFF555570).withAlpha(hover ? 0.8f : 0.4f));
-        g.drawRoundedRectangle(x - iconSize / 2.0f, iconY - iconSize / 2.0f, iconSize, iconSize, 3.0f, 1.0f);
-
-        g.setFont(juce::Font(12.0f).boldened());
-        g.drawText("+", juce::Rectangle<int>(static_cast<int>(x) - 7, static_cast<int>(iconY) - 7, 14, 14),
-                   juce::Justification::centred, false);
-    }
 }
 
 void EQGraphComponent::drawSpectrum(juce::Graphics& g)
@@ -266,86 +192,51 @@ void EQGraphComponent::drawSpectrum(juce::Graphics& g)
     }
 }
 
-void EQGraphComponent::drawSoloMarker(juce::Graphics& g)
-{
-    auto& eq = engine.getEqualizer();
-    if (!eq.isSoloActive()) return;
-
-    float freq = eq.getSoloFrequency();
-    float x = getXForFrequency(freq);
-    if (x < graphX || x > graphX + graphW) return;
-
-    g.setColour(juce::Colour(0xFF00E5B8).withAlpha(0.1f));
-    g.fillRect(x - 20.0f, graphY, 40.0f, graphH);
-    g.setColour(juce::Colour(0xFF00E5B8).withAlpha(0.5f));
-    g.drawVerticalLine(static_cast<int>(x), graphY, graphY + graphH);
-    g.setColour(juce::Colour(0xFF00E5B8).withAlpha(0.9f));
-    g.setFont(juce::Font(8.0f).boldened());
-    g.drawText("SOLO", juce::Rectangle<int>(static_cast<int>(x) - 14, static_cast<int>(graphY) - 12, 28, 10),
-               juce::Justification::centred, false);
-}
-
 void EQGraphComponent::drawEnvelope(juce::Graphics& g)
 {
     auto& env = engine.getEnvelope();
-    const auto& points = env.getPoints();
-    float zeroY = getYForGain(0.0f);
+    auto pts = env.getPoints();
+    if (pts.empty()) return;
 
-    if (points.empty()) return;
-
-    juce::Path fillPath;
-    fillPath.startNewSubPath(graphX, zeroY);
-    for (const auto& pt : points)
-        fillPath.lineTo(getXForFrequency(pt.frequency), getYForGain(pt.gain));
-    fillPath.lineTo(graphX + graphW, zeroY);
-    fillPath.closeSubPath();
-
-    g.setColour(juce::Colour(0xFFFFD700).withAlpha(0.1f));
-    g.fillPath(fillPath);
-    g.setColour(juce::Colour(0xFFFFD700).withAlpha(0.06f));
-    g.strokePath(fillPath, juce::PathStrokeType(8.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    juce::Path linePath;
+    juce::Path path;
     bool started = false;
-    for (const auto& pt : points)
+    for (const auto& pt : pts)
     {
         float x = getXForFrequency(pt.frequency);
         float y = getYForGain(pt.gain);
-        if (!started) { linePath.startNewSubPath(x, y); started = true; }
-        else linePath.lineTo(x, y);
+        if (!started) { path.startNewSubPath(x, y); started = true; }
+        else path.lineTo(x, y);
     }
-    g.setColour(juce::Colour(0xFFFFD700).withAlpha(0.25f));
-    g.strokePath(linePath, juce::PathStrokeType(5.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    g.setColour(juce::Colour(0xFFFFD700));
-    g.strokePath(linePath, juce::PathStrokeType(2.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
-    for (const auto& pt : points)
+    g.setColour(juce::Colour(0xFFFFD700).withAlpha(0.15f));
+    g.strokePath(path, juce::PathStrokeType(8.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    g.setColour(juce::Colour(0xFFFFD700).withAlpha(0.4f));
+    g.strokePath(path, juce::PathStrokeType(3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+    for (const auto& pt : pts)
     {
         float x = getXForFrequency(pt.frequency);
         float y = getYForGain(pt.gain);
-        g.setColour(juce::Colour(0xFFFFD700).withAlpha(0.4f));
+        g.setColour(juce::Colour(0xFFFFD700).withAlpha(0.6f));
         g.fillEllipse(x - 3.0f, y - 3.0f, 6.0f, 6.0f);
-        g.setColour(juce::Colour(0xFFFFD700));
-        g.fillEllipse(x - 1.5f, y - 1.5f, 3.0f, 3.0f);
     }
 }
 
 void EQGraphComponent::drawResponse(juce::Graphics& g)
 {
-    auto& eq = engine.getEqualizer();
-    float zeroY = getYForGain(0.0f);
-
-    if (responsePathDirty || cachedResponsePath.isEmpty())
+    if (responsePathDirty)
     {
         cachedResponsePath.clear();
+        auto& eq = engine.getEqualizer();
         bool started = false;
-        for (int px = 0; px <= static_cast<int>(graphW); px += 4)
+        float zeroY = getYForGain(0.0f);
+        for (int px = 0; px <= static_cast<int>(graphW); px += 2)
         {
             float x = graphX + static_cast<float>(px);
             float freq = getFrequencyForX(x);
-            float response = eq.getCompoundResponse(freq);
-            response = juce::jlimit(MinGain, MaxGain, response);
-            float y = getYForGain(response);
+            float gain = eq.getCompoundResponse(freq);
+            gain = juce::jlimit(MinGain, MaxGain, gain);
+            float y = getYForGain(gain);
             if (!started) { cachedResponsePath.startNewSubPath(x, y); started = true; }
             else cachedResponsePath.lineTo(x, y);
         }
@@ -353,6 +244,7 @@ void EQGraphComponent::drawResponse(juce::Graphics& g)
     }
 
     juce::Path fillPath(cachedResponsePath);
+    float zeroY = getYForGain(0.0f);
     fillPath.lineTo(graphX + graphW, zeroY);
     fillPath.lineTo(graphX, zeroY);
     fillPath.closeSubPath();
@@ -362,24 +254,6 @@ void EQGraphComponent::drawResponse(juce::Graphics& g)
     g.strokePath(fillPath, juce::PathStrokeType(6.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
     g.setColour(juce::Colour(0xFFFF6B6B));
     g.strokePath(cachedResponsePath, juce::PathStrokeType(1.5f));
-
-    if (eq.getNumZones() > 0)
-    {
-        juce::Path compPath;
-        bool started = false;
-        for (int px = 0; px <= static_cast<int>(graphW); px += 4)
-        {
-            float x = graphX + static_cast<float>(px);
-            float freq = getFrequencyForX(x);
-            float cGain = eq.getCompressedGain(freq);
-            cGain = juce::jlimit(MinGain, MaxGain, cGain);
-            float y = getYForGain(cGain);
-            if (!started) { compPath.startNewSubPath(x, y); started = true; }
-            else compPath.lineTo(x, y);
-        }
-        g.setColour(juce::Colour(0xFFFF6B6B).withAlpha(0.6f));
-        g.strokePath(compPath, juce::PathStrokeType(2.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    }
 }
 
 void EQGraphComponent::drawTrackingDot(juce::Graphics& g)
@@ -418,27 +292,7 @@ void EQGraphComponent::mouseDown(const juce::MouseEvent& event)
     auto& eq = engine.getEqualizer();
 
     if (mx < graphX || mx > graphX + graphW || my < graphY || my > graphY + graphH)
-    {
-        float iconY = graphY + graphH + 14.0f;
-        float iconSize = 14.0f;
-        if (my >= iconY - iconSize && my <= iconY + iconSize)
-        {
-            float plusFreqs[] = { 100, 200, 500, 1000, 2000, 5000, 10000 };
-            for (int i = 0; i < 7; ++i)
-            {
-                float x = getXForFrequency(plusFreqs[i]);
-                if (std::abs(mx - x) < iconSize / 2.0f)
-                {
-                    int idx = eq.addZone(plusFreqs[i]);
-                    engine.getEnvelope().markAudioDirty();
-                    selectedZone = idx;
-                    markResponseDirty();
-                    return;
-                }
-            }
-        }
         return;
-    }
 
     if (event.mods.isRightButtonDown() || event.mods.isPopupMenu())
     {
@@ -462,46 +316,6 @@ void EQGraphComponent::mouseDown(const juce::MouseEvent& event)
         return;
     }
 
-    int nZones = eq.getNumZones();
-    for (int i = 0; i < nZones; ++i)
-    {
-        const auto& z = eq.getZones()[i];
-        float zx1 = getXForFrequency(z.startFreq);
-        float zx2 = getXForFrequency(z.endFreq);
-
-        if (mx >= zx1 - 4 && mx <= zx1 + 4)
-        {
-            draggingZoneEdge = i;
-            draggingEdgeLeft = true;
-            dragMode = DragMode::ZoneEdge;
-            engine.getEnvelope().pushUndo();
-            return;
-        }
-        if (mx >= zx2 - 4 && mx <= zx2 + 4)
-        {
-            draggingZoneEdge = i;
-            draggingEdgeLeft = false;
-            dragMode = DragMode::ZoneEdge;
-            engine.getEnvelope().pushUndo();
-            return;
-        }
-    }
-
-    for (int i = 0; i < nZones; ++i)
-    {
-        const auto& z = eq.getZones()[i];
-        float zx1 = getXForFrequency(z.startFreq);
-        float zx2 = getXForFrequency(z.endFreq);
-        if (mx >= zx1 && mx <= zx2)
-        {
-            selectedZone = i;
-            repaint();
-            return;
-        }
-    }
-
-    selectedZone = -1;
-
     dragMode = DragMode::Draw;
     engine.getEnvelope().pushUndo();
     float freq = getFrequencyForX(mx);
@@ -523,20 +337,6 @@ void EQGraphComponent::mouseDrag(const juce::MouseEvent& event)
     float my = juce::jmax(graphY, juce::jmin(graphY + graphH, static_cast<float>(event.getPosition().y)));
 
     auto& eq = engine.getEqualizer();
-
-    if (dragMode == DragMode::ZoneEdge)
-    {
-        float freq = getFrequencyForX(mx);
-        auto& z = eq.getZone(draggingZoneEdge);
-        if (draggingEdgeLeft)
-            z.startFreq = juce::jlimit(20.0f, z.endFreq - 10.0f, freq);
-        else
-            z.endFreq = juce::jlimit(z.startFreq + 10.0f, 20000.0f, freq);
-        engine.getEnvelope().markAudioDirty();
-        eq.rebuildBands();
-        repaint();
-        return;
-    }
 
     if (dragMode == DragMode::Solo)
     {
@@ -598,14 +398,6 @@ void EQGraphComponent::mouseUp(const juce::MouseEvent&)
         dragMode = DragMode::None;
         drawCursorX = -1.0f;
         repaint();
-        return;
-    }
-
-    if (dragMode == DragMode::ZoneEdge)
-    {
-        draggingZoneEdge = -1;
-        dragMode = DragMode::None;
-        engine.getEnvelope().markAudioDirty();
         return;
     }
 

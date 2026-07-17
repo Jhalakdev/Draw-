@@ -99,7 +99,7 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
         processorRef.getAPVTS(), "msMode", msCombo);
 
     charCombo.setEditableText(false);
-    charCombo.addItemList({ "Off", "Mister Passive", "Krane Mybiz", "West Nugget", "Pool Dake", "Never 80-8", "Liquid State Solid" }, 1);
+    charCombo.addItemList({ "Off", "Mister Passive", "Krane Mybiz", "West Nugget", "Pool Dake", "Never 80-8", "Liquid State 4k" }, 1);
     charCombo.setSelectedItemIndex(0);
     charCombo.setColour(juce::ComboBox::backgroundColourId, LF::bgPanel);
     charCombo.setColour(juce::ComboBox::textColourId, LF::textBright);
@@ -121,17 +121,16 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
 
     charBlendLabel.setText("BLEND", juce::dontSendNotification);
     charBlendLabel.setColour(juce::Label::textColourId, LF::textDim);
-    charBlendLabel.setFont(7.0f);
+    charBlendLabel.setFont(8.0f);
     charBlendLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(charBlendLabel);
 
     emulationLabel.setText("EMULATION", juce::dontSendNotification);
     emulationLabel.setColour(juce::Label::textColourId, LF::textDim);
-    emulationLabel.setFont(7.0f);
+    emulationLabel.setFont(8.0f);
     emulationLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(emulationLabel);
 
-    // Style blend slider visibly
     charBlendSlider.setColour(juce::Slider::trackColourId, LF::accentGold.withAlpha(0.4f));
     charBlendSlider.setColour(juce::Slider::thumbColourId, LF::accentGold);
     charBlendSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel.brighter(0.1f));
@@ -154,17 +153,17 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
     gainLabel.setText("GAIN", juce::dontSendNotification);
     gainLabel.setColour(juce::Label::textColourId, LF::textMuted);
     gainLabel.setJustificationType(juce::Justification::centred);
-    gainLabel.setFont(8.0f);
+    gainLabel.setFont(9.0f);
     addAndMakeVisible(gainLabel);
 
     gainSlider.setSliderStyle(juce::Slider::LinearVertical);
     gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 36, 12);
-    gainSlider.setColour(juce::Slider::trackColourId, LF::border);
+    gainSlider.setColour(juce::Slider::trackColourId, LF::accentTeal.withAlpha(0.3f));
     gainSlider.setColour(juce::Slider::thumbColourId, LF::accentTeal);
+    gainSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel.brighter(0.05f));
     gainSlider.setColour(juce::Slider::textBoxTextColourId, LF::textBright);
     gainSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::transparentBlack);
     gainSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
-    gainSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel);
     addAndMakeVisible(gainSlider);
     gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processorRef.getAPVTS(), "masterGain", gainSlider);
@@ -192,70 +191,6 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
         eqGraph.repaint();
     };
 
-    // Zone panel
-    zonePanel.setVisible(false);
-    addAndMakeVisible(zonePanel);
-
-    zoneTitle.setColour(juce::Label::textColourId, LF::accentRed);
-    zoneTitle.setFont(juce::Font(10.0f).boldened());
-    zonePanel.addAndMakeVisible(zoneTitle);
-
-    styleBtn(zoneDynBtn, LF::accentGold, LF::bgPanel);
-    zoneDynBtn.setClickingTogglesState(true);
-    zonePanel.addAndMakeVisible(zoneDynBtn);
-    zoneDynBtn.onClick = [this]()
-    {
-        int idx = eqGraph.getSelectedZone();
-        if (idx < 0) return;
-        auto& z = processorRef.getEngine().getEqualizer().getZone(idx);
-        z.enabled = zoneDynBtn.getToggleState();
-        processorRef.getEngine().getEqualizer().rebuildBands();
-        eqGraph.markResponseDirty();
-    };
-
-    zoneDeleteBtn.setColour(juce::TextButton::buttonColourId, LF::bgPanel);
-    zoneDeleteBtn.setColour(juce::TextButton::textColourOffId, LF::accentRed);
-    zoneDeleteBtn.setLookAndFeel(&lnf);
-    zonePanel.addAndMakeVisible(zoneDeleteBtn);
-    zoneDeleteBtn.onClick = [this]()
-    {
-        int idx = eqGraph.getSelectedZone();
-        if (idx < 0) return;
-        processorRef.getEngine().getEqualizer().removeZone(idx);
-        eqGraph.setSelectedZone(-1);
-        eqGraph.markResponseDirty();
-    };
-
-    auto zoneSliderStyle = [this](juce::Slider& s, juce::Label& lbl, const char* text, juce::Colour col)
-    {
-        setupSlider(s, col);
-        lbl.setText(text, juce::dontSendNotification);
-        lbl.setColour(juce::Label::textColourId, LF::textDim);
-        lbl.setFont(8.0f);
-        lbl.setJustificationType(juce::Justification::centredRight);
-        zonePanel.addAndMakeVisible(s);
-        zonePanel.addAndMakeVisible(lbl);
-    };
-
-    zoneSliderStyle(zoneThreshSlider, zoneThreshLabel, "TH", LF::accentTeal);
-    zoneSliderStyle(zoneRatioSlider, zoneRatioLabel, "RT", LF::accentGold);
-    zoneSliderStyle(zoneAttackSlider, zoneAttackLabel, "AT", LF::textBright);
-    zoneSliderStyle(zoneReleaseSlider, zoneReleaseLabel, "RL", LF::textBright);
-    zoneSliderStyle(zoneRangeSlider, zoneRangeLabel, "RN", LF::accentRed);
-
-    zoneThreshSlider.setRange(-60.0f, 0.0f, 0.5f);
-    zoneThreshSlider.onValueChange = [this]() { updateZonePanel(eqGraph.getSelectedZone()); };
-    zoneRatioSlider.setRange(1.0f, 20.0f, 0.5f);
-    zoneRatioSlider.onValueChange = [this]() { updateZonePanel(eqGraph.getSelectedZone()); };
-    zoneAttackSlider.setRange(0.1f, 500.0f, 0.1f);
-    zoneAttackSlider.setSkewFactor(0.3f);
-    zoneAttackSlider.onValueChange = [this]() { updateZonePanel(eqGraph.getSelectedZone()); };
-    zoneReleaseSlider.setRange(5.0f, 2000.0f, 1.0f);
-    zoneReleaseSlider.setSkewFactor(0.4f);
-    zoneReleaseSlider.onValueChange = [this]() { updateZonePanel(eqGraph.getSelectedZone()); };
-    zoneRangeSlider.setRange(1.0f, 36.0f, 0.5f);
-    zoneRangeSlider.onValueChange = [this]() { updateZonePanel(eqGraph.getSelectedZone()); };
-
     startTimerHz(15);
 }
 
@@ -268,47 +203,8 @@ PitchFollowEQAudioProcessorEditor::~PitchFollowEQAudioProcessorEditor()
     redoBtn.setLookAndFeel(nullptr);
     clearBtn.setLookAndFeel(nullptr);
     charBlendSlider.setLookAndFeel(nullptr);
-    zoneDynBtn.setLookAndFeel(nullptr);
-    zoneDeleteBtn.setLookAndFeel(nullptr);
     setLookAndFeel(nullptr);
     stopTimer();
-}
-
-void PitchFollowEQAudioProcessorEditor::updateZonePanel(int idx)
-{
-    if (idx < 0 || idx >= processorRef.getEngine().getEqualizer().getNumZones())
-    {
-        zonePanel.setVisible(false);
-        return;
-    }
-
-    auto& z = processorRef.getEngine().getEqualizer().getZone(idx);
-    zonePanel.setVisible(true);
-    zoneTitle.setText("Z" + juce::String(idx + 1), juce::dontSendNotification);
-    zoneDynBtn.setToggleState(z.enabled, juce::dontSendNotification);
-    zoneDynBtn.setButtonText(z.enabled ? "ON" : "OFF");
-
-    if (!zoneThreshSlider.isMouseButtonDown())
-        zoneThreshSlider.setValue(z.threshold, juce::dontSendNotification);
-    else z.threshold = (float)zoneThreshSlider.getValue();
-
-    if (!zoneRatioSlider.isMouseButtonDown())
-        zoneRatioSlider.setValue(z.ratio, juce::dontSendNotification);
-    else z.ratio = (float)zoneRatioSlider.getValue();
-
-    if (!zoneAttackSlider.isMouseButtonDown())
-        zoneAttackSlider.setValue(z.attackMs, juce::dontSendNotification);
-    else z.attackMs = (float)zoneAttackSlider.getValue();
-
-    if (!zoneReleaseSlider.isMouseButtonDown())
-        zoneReleaseSlider.setValue(z.releaseMs, juce::dontSendNotification);
-    else z.releaseMs = (float)zoneReleaseSlider.getValue();
-
-    if (!zoneRangeSlider.isMouseButtonDown())
-        zoneRangeSlider.setValue(z.range, juce::dontSendNotification);
-    else z.range = (float)zoneRangeSlider.getValue();
-
-    processorRef.getEngine().getEqualizer().rebuildBands();
 }
 
 void PitchFollowEQAudioProcessorEditor::timerCallback()
@@ -360,11 +256,6 @@ void PitchFollowEQAudioProcessorEditor::timerCallback()
 
     float blendVal = processorRef.getAPVTS().getRawParameterValue("charBlend")->load();
     charBlendLabel.setText(juce::String(static_cast<int>(blendVal)) + "%", juce::dontSendNotification);
-
-    int sel = eqGraph.getSelectedZone();
-    updateZonePanel(sel);
-    if (sel < 0 && zonePanel.isVisible())
-        zonePanel.setVisible(false);
 }
 
 void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
@@ -387,6 +278,10 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(LF::accentTeal.withAlpha(0.95f));
     g.setFont(juce::Font(15.0f).boldened());
     g.drawText("Curvex", juce::Rectangle<int>(12, 2, 64, 22),
+               juce::Justification::centredLeft);
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(9.0f));
+    g.drawText("Draw EQ " BUILD_VERSION, juce::Rectangle<int>(12, 22, 100, 16),
                juce::Justification::centredLeft);
 
     // Separator lines between groups
@@ -427,24 +322,25 @@ void PitchFollowEQAudioProcessorEditor::resized()
     x += 64;
 
     // Group 2: Emulation combo + BLEND (bigger)
-    charCombo.setBounds(x, btnY, 86, btnH);
-    emulationLabel.setBounds(x, btnY - 8, 86, 8);
-    x += 90;
+    charCombo.setBounds(x, btnY, 128, btnH);
+    emulationLabel.setBounds(x, btnY - 10, 128, 10);
+    x += 132;
     charBlendSlider.setBounds(x, btnY - 2, 72, btnH + 8);
-    charBlendLabel.setBounds(x, btnY - 12, 72, 10);
+    charBlendLabel.setBounds(x, btnY - 14, 72, 12);
     x += 80;
 
     // Group 3: AUTO GAIN
     autoGainBtn.setBounds(x, btnY, 64, btnH);
     x += 72;
 
-    // Group 4: Undo/Redo/Clear
-    undoBtn.setBounds(x, btnY, 34, btnH);
-    x += 38;
-    redoBtn.setBounds(x, btnY, 34, btnH);
-    x += 38;
-    clearBtn.setBounds(x, btnY, 34, btnH);
-    x += 42;
+    // Group 4: Undo/Redo/Clear — wider, shifted 30% right
+    x += 50;
+    undoBtn.setBounds(x, btnY, 44, btnH);
+    x += 48;
+    redoBtn.setBounds(x, btnY, 44, btnH);
+    x += 48;
+    clearBtn.setBounds(x, btnY, 44, btnH);
+    x += 52;
 
     // Pitch info right side
     auto pitchArea = header.removeFromRight(148);
@@ -458,65 +354,20 @@ void PitchFollowEQAudioProcessorEditor::resized()
     auto meterArea = sidebar.removeFromTop(sidebar.getHeight() * 0.65f);
     levelMeter.setBounds(meterArea.reduced(2));
 
-    gainSlider.setSliderStyle(juce::Slider::LinearVertical);
-    gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 36, 12);
-    gainSlider.setColour(juce::Slider::trackColourId, LF::accentTeal.withAlpha(0.5f));
-    gainSlider.setColour(juce::Slider::thumbColourId, LF::accentTeal);
-    gainSlider.setColour(juce::Slider::textBoxTextColourId, LF::textBright);
-    gainSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::transparentBlack);
-    gainSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
-    gainSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel);
-    gainSlider.setBounds(sidebar.withTrimmedTop(4).reduced(3));
+    gainSlider.setBounds(sidebar.withTrimmedTop(4).reduced(1));
     gainLabel.setText("MASTER", juce::dontSendNotification);
-    gainLabel.setBounds(sidebar.getX() - 2, sidebar.getY() - 12, 80, 10);
+    gainLabel.setFont(9.0f);
+    gainLabel.setBounds(sidebar.getX() - 2, sidebar.getY() - 14, 80, 12);
 
-    // ===== GRAPH AREA (leave room for bottom controls) =====
+    // ===== GRAPH AREA =====
     auto graphArea = area.reduced(6, 4);
     graphArea.removeFromBottom(32);
 
     // Phase combo at bottom-right of graph
     phaseCombo.setBounds(graphArea.getRight() - 130, getHeight() - 24, 130, 20);
 
-    // M/S combo at bottom-left of graph
-    msCombo.setBounds(graphArea.getX(), getHeight() - 24, 130, 20);
-
-    // ===== ZONE STRIP + GRAPH =====
-    int zoneH = 36;
-    bool showZone = zonePanel.isVisible();
-
-    if (showZone)
-    {
-        auto bottomStrip = graphArea.removeFromBottom(zoneH);
-        zonePanel.setBounds(bottomStrip);
-
-        int zx = bottomStrip.getX() + 4;
-        zoneTitle.setBounds(zx, 0, 30, bottomStrip.getHeight());
-        zoneDynBtn.setBounds(zx + 32, 4, 28, bottomStrip.getHeight() - 8);
-        zoneDeleteBtn.setBounds(zx + 64, 4, 20, bottomStrip.getHeight() - 8);
-
-        int sliderY = 4;
-        int sliderH = bottomStrip.getHeight() - 8;
-        int sliderW = 62;
-        int labelW = 18;
-        int gap = 3;
-        int sx = zx + 90;
-
-        auto place = [&](juce::Slider& s, juce::Label& l)
-        {
-            l.setBounds(sx, sliderY, labelW, sliderH);
-            s.setBounds(sx + labelW + 2, sliderY, sliderW, sliderH);
-            sx += labelW + 2 + sliderW + gap;
-        };
-        place(zoneThreshSlider, zoneThreshLabel);
-        place(zoneRatioSlider, zoneRatioLabel);
-        place(zoneAttackSlider, zoneAttackLabel);
-        place(zoneReleaseSlider, zoneReleaseLabel);
-        place(zoneRangeSlider, zoneRangeLabel);
-    }
-    else
-    {
-        zonePanel.setBounds(0, 0, 0, 0);
-    }
+    // M/S combo at bottom-left of graph (shifted 10% right)
+    msCombo.setBounds(graphArea.getX() + static_cast<int>(graphArea.getWidth() * 0.1f), getHeight() - 24, 130, 20);
 
     eqGraph.setBounds(graphArea);
 }

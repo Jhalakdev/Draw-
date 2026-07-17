@@ -26,43 +26,6 @@ void Equalizer::prepare(double sampleRate, int samplesPerBlock)
     charScratch.resize(maxChannels);
     for (auto& ch : charScratch)
         ch.resize(samplesPerBlock, 0.0f);
-    zonesDirty = true;
-}
-
-int Equalizer::addZone(float freq)
-{
-    Zone z;
-    z.startFreq = juce::jlimit(20.0f, freq * 0.7f, freq / 3.0f);
-    z.endFreq = juce::jlimit(freq * 1.3f, 20000.0f, freq * 3.0f);
-    z.enabled = true;
-    zones.push_back(z);
-    zonesDirty = true;
-    return (int)zones.size() - 1;
-}
-
-void Equalizer::removeZone(int idx)
-{
-    if (idx >= 0 && idx < (int)zones.size())
-    {
-        zones.erase(zones.begin() + idx);
-        zonesDirty = true;
-    }
-}
-
-void Equalizer::rebuildBands()
-{
-    bands.clear();
-    for (const auto& z : zones)
-    {
-        if (!z.enabled) continue;
-        DynBand band;
-        float cf = std::sqrt(z.startFreq * z.endFreq);
-        float bw = z.endFreq - z.startFreq;
-        float q = (bw > 1.0f) ? cf / bw : 0.707f;
-        q = juce::jlimit(0.3f, 10.0f, q);
-        band.setParams((float)currentSampleRate, cf, q, z.attackMs, z.releaseMs);
-        bands.push_back(band);
-    }
 }
 
 void Equalizer::process(juce::dsp::AudioBlock<float>& block)
@@ -79,14 +42,11 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
             dl.resize(IrLen, 0.0f);
     }
 
-    bool hasDyn = !zones.empty();
-
     if (crossfadeRemaining > 0)
     {
         for (int ch = 0; ch < numChannels; ++ch)
         {
             auto* data = block.getChannelPointer(static_cast<size_t>(ch));
-            auto* inData = block.getChannelPointer(static_cast<size_t>(ch));
             auto& dl = delayLine[ch];
 
             for (int s = 0; s < numSamples; ++s)
@@ -112,27 +72,6 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
                 else
                     out = newOut;
 
-                if (hasDyn)
-                {
-                    float mod = out;
-                    for (size_t b = 0; b < bands.size(); ++b)
-                    {
-                        bands[b].processAnalysis(inData[s]);
-                        float bpMod = bands[b].processModulation(out);
-                        float gr = 1.0f;
-                        const auto& z = zones[b];
-                        float envDB = 20.0f * std::log10(std::max(1e-6f, bands[b].envelope));
-                        if (envDB > z.threshold)
-                        {
-                            float gRedDB = juce::jmin((envDB - z.threshold) * (1.0f - 1.0f / z.ratio), z.range);
-                            gr = std::pow(10.0f, -gRedDB / 20.0f);
-                        }
-                        bands[b].gainReduction = gr;
-                        mod += bpMod * (gr - 1.0f);
-                    }
-                    out = mod;
-                }
-
                 data[s] = out;
                 delayIndex = (delayIndex + 1) % IrLen;
             }
@@ -145,7 +84,6 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
         for (int ch = 0; ch < numChannels; ++ch)
         {
             auto* data = block.getChannelPointer(static_cast<size_t>(ch));
-            auto* inData = block.getChannelPointer(static_cast<size_t>(ch));
             auto& dl = delayLine[ch];
 
             for (int s = 0; s < numSamples; ++s)
@@ -158,27 +96,6 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
                 {
                     out += ir[i] * dl[idx];
                     if (--idx < 0) idx = IrLen - 1;
-                }
-
-                if (hasDyn)
-                {
-                    float mod = out;
-                    for (size_t b = 0; b < bands.size(); ++b)
-                    {
-                        bands[b].processAnalysis(inData[s]);
-                        float bpMod = bands[b].processModulation(out);
-                        float gr = 1.0f;
-                        const auto& z = zones[b];
-                        float envDB = 20.0f * std::log10(std::max(1e-6f, bands[b].envelope));
-                        if (envDB > z.threshold)
-                        {
-                            float gRedDB = juce::jmin((envDB - z.threshold) * (1.0f - 1.0f / z.ratio), z.range);
-                            gr = std::pow(10.0f, -gRedDB / 20.0f);
-                        }
-                        bands[b].gainReduction = gr;
-                        mod += bpMod * (gr - 1.0f);
-                    }
-                    out = mod;
                 }
 
                 data[s] = out;
@@ -203,11 +120,6 @@ void Equalizer::flushDirty()
     {
         rebuild();
         dirty = false;
-    }
-    if (zonesDirty)
-    {
-        rebuildBands();
-        zonesDirty = false;
     }
 }
 
@@ -392,24 +304,4 @@ float Equalizer::getCompoundResponse(float freq) const
 
     float magSq = sumRe * sumRe + sumIm * sumIm;
     return 10.0f * std::log10(std::max(1e-10f, magSq));
-}
-
-float Equalizer::getCompressedGain(float freq) const
-{
-    float gain = getFrequencyResponse(freq);
-    for (size_t b = 0; b < bands.size() && b < zones.size(); ++b)
-    {
-        if (!zones[b].enabled) continue;
-        const auto& z = zones[b];
-        if (freq < z.startFreq || freq > z.endFreq) continue;
-
-        float cf = std::sqrt(z.startFreq * z.endFreq);
-        float ratio = freq / cf;
-        float ri = 1.0f / ratio;
-        float bpSq = 1.0f / ((ratio - ri) * (ratio - ri) * 4.0f + 1.0f);
-        float bpGain = std::sqrt(std::max(0.0f, bpSq));
-        float gRed = 1.0f - bpGain + bpGain * bands[b].gainReduction;
-        gain += 20.0f * std::log10(std::max(1e-6f, gRed));
-    }
-    return gain;
 }

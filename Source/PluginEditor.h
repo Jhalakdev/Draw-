@@ -4,7 +4,7 @@
 #include "UI/EQGraphComponent.h"
 #include "UI/LevelMeterComponent.h"
 
-#define BUILD_VERSION "v23"
+#define BUILD_VERSION "v24"
 
 class PitchFollowEQLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -82,23 +82,6 @@ private:
     juce::ComboBox msCombo;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> msAttachment;
 
-    // Zone controls panel
-    juce::Component zonePanel;
-    juce::Label zoneTitle;
-    juce::TextButton zoneDynBtn { "DYN" };
-    juce::TextButton zoneDeleteBtn { "X" };
-    juce::Label zoneThreshLabel;
-    juce::Slider zoneThreshSlider;
-    juce::Label zoneRatioLabel;
-    juce::Slider zoneRatioSlider;
-    juce::Label zoneAttackLabel;
-    juce::Slider zoneAttackSlider;
-    juce::Label zoneReleaseLabel;
-    juce::Slider zoneReleaseSlider;
-    juce::Label zoneRangeLabel;
-    juce::Slider zoneRangeSlider;
-
-    void updateZonePanel(int idx);
     void setupSlider(juce::Slider& s, juce::Colour thumb);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchFollowEQAudioProcessorEditor)
