@@ -83,10 +83,10 @@ class MisterPassiveWDF : public WDFCharacterEngine {
 public:
     WDFResonantBand band1, band2, band3, band4;
     MisterPassiveWDF(double fs)
-        : band1(600, 1000, 8.0, 2.2e-6, fs),
-          band2(600, 470, 1.5, 1.0e-6, fs),
-          band3(600, 330, 0.5, 470e-9, fs),
-          band4(600, 220, 0.1, 100e-9, fs) {}
+        : band1(50, 10000, 8.0, 2.2e-6, fs),
+          band2(50, 6800, 1.5, 1.0e-6, fs),
+          band3(50, 4700, 0.5, 470e-9, fs),
+          band4(50, 3300, 0.1, 100e-9, fs) {}
     void prepare(double fs) override { band1.prepare(fs); band2.prepare(fs); band3.prepare(fs); band4.prepare(fs); }
     float process(float input) override {
         input = band1.process(input); input = band2.process(input);
@@ -108,8 +108,8 @@ class PoolDakeWDF : public WDFCharacterEngine {
 public:
     WDFResonantBand lowBoost, lowCut, hiBoost, hiCut;
     PoolDakeWDF(double fs)
-        : lowBoost(600, 1000, 8.0, 2.2e-6, fs), lowCut(600, 470, 1.5, 1.0e-6, fs),
-          hiBoost(600, 330, 0.5, 470e-9, fs), hiCut(600, 220, 0.1, 100e-9, fs) {}
+        : lowBoost(50, 10000, 8.0, 2.2e-6, fs), lowCut(50, 6800, 1.5, 1.0e-6, fs),
+          hiBoost(50, 4700, 0.5, 470e-9, fs), hiCut(50, 3300, 0.1, 100e-9, fs) {}
     void prepare(double fs) override { lowBoost.prepare(fs); lowCut.prepare(fs); hiBoost.prepare(fs); hiCut.prepare(fs); }
     float process(float input) override {
         input = lowBoost.process(input); input = lowCut.process(input);
@@ -131,8 +131,8 @@ class KraneMybizWDF : public WDFCharacterEngine {
 public:
     WDFResonantBand b1, b2, b3, b4;
     KraneMybizWDF(double fs)
-        : b1(600, 1800, 3.0, 1.0e-6, fs), b2(600, 1200, 1.5, 470e-9, fs),
-          b3(600, 820, 0.47, 220e-9, fs), b4(600, 560, 0.15, 100e-9, fs) {}
+        : b1(50, 10000, 3.0, 1.0e-6, fs), b2(50, 6800, 1.5, 470e-9, fs),
+          b3(50, 4700, 0.47, 220e-9, fs), b4(50, 3300, 0.15, 100e-9, fs) {}
     void prepare(double fs) override { b1.prepare(fs); b2.prepare(fs); b3.prepare(fs); b4.prepare(fs); }
     float process(float input) override {
         input = b1.process(input); input = b2.process(input);
@@ -154,9 +154,9 @@ class WestNuggetWDF : public WDFCharacterEngine {
 public:
     WDFResonantBand shelfLow, bell, shelfHigh;
     WestNuggetWDF(double fs)
-        : shelfLow(1200, 1000, 4.0, 2.2e-6, fs),
-          bell(600, 470, 1.5, 470e-9, fs),
-          shelfHigh(1200, 560, 0.1, 100e-9, fs) {}
+        : shelfLow(50, 10000, 4.0, 2.2e-6, fs),
+          bell(50, 6800, 1.5, 470e-9, fs),
+          shelfHigh(50, 3300, 0.1, 100e-9, fs) {}
     void prepare(double fs) override { shelfLow.prepare(fs); bell.prepare(fs); shelfHigh.prepare(fs); }
     float process(float input) override {
         input = shelfLow.process(input);
@@ -178,8 +178,8 @@ class Never80_8WDF : public WDFCharacterEngine {
 public:
     WDFResonantBand b1, b2, b3, b4;
     Never80_8WDF(double fs)
-        : b1(600, 1000, 6.0, 3.3e-6, fs), b2(600, 680, 2.2, 1.5e-6, fs),
-          b3(600, 470, 0.68, 470e-9, fs), b4(600, 330, 0.15, 100e-9, fs) {}
+        : b1(50, 10000, 6.0, 3.3e-6, fs), b2(50, 6800, 2.2, 1.5e-6, fs),
+          b3(50, 4700, 0.68, 470e-9, fs), b4(50, 3300, 0.15, 100e-9, fs) {}
     void prepare(double fs) override { b1.prepare(fs); b2.prepare(fs); b3.prepare(fs); b4.prepare(fs); }
     float process(float input) override {
         input = b1.process(input); input = b2.process(input);
@@ -201,8 +201,8 @@ class LiquidStateSolidWDF : public WDFCharacterEngine {
 public:
     WDFResonantBand b1, b2, b3, b4;
     LiquidStateSolidWDF(double fs)
-        : b1(600, 2200, 2.0, 470e-9, fs), b2(600, 1800, 1.0, 220e-9, fs),
-          b3(600, 1200, 0.47, 100e-9, fs), b4(600, 820, 0.22, 47e-9, fs) {}
+        : b1(50, 10000, 2.0, 470e-9, fs), b2(50, 6800, 1.0, 220e-9, fs),
+          b3(50, 4700, 0.47, 100e-9, fs), b4(50, 3300, 0.22, 47e-9, fs) {}
     void prepare(double fs) override { b1.prepare(fs); b2.prepare(fs); b3.prepare(fs); b4.prepare(fs); }
     float process(float input) override {
         input = b1.process(input); input = b2.process(input);

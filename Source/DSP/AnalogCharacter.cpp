@@ -379,7 +379,7 @@ void AnalogCharacter::loadPreset()
         case FormPassive:
         {
             useWDF = true;
-            wdfMakeupGain = 40.0f;
+            wdfMakeupGain = 3.0f;
             wdfEngine = createWDFEngine(WDF_MisterPassive, sr);
             wdfEngine2 = createWDFEngine(WDF_MisterPassive, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 42);
@@ -392,7 +392,7 @@ void AnalogCharacter::loadPreset()
             setAll(lowStage,   10.0f, 120.0f, 0.30f, 0, 0.997f);
             setAll(midStage,    5.0f,  70.0f, 0.20f, 0, 0.998f);
             setAll(highStage,   2.0f,  40.0f, 0.15f, 0, 0.999f);
-            setAll(outputStage,20.0f, 180.0f, 0.10f, 0, 0.998f);
+            setAll(outputStage,20.0f, 180.0f, 0.35f, 0, 0.998f);
 
             psmAttack = 0.008f; psmRelease = 0.0002f; psmDepth = 0.04f;
             loadingAmount = 0.6f;
@@ -405,7 +405,7 @@ void AnalogCharacter::loadPreset()
         case CraneSong:
         {
             useWDF = true;
-            wdfMakeupGain = 35.0f;
+            wdfMakeupGain = 3.0f;
             wdfEngine = createWDFEngine(WDF_KraneMybiz, sr);
             wdfEngine2 = createWDFEngine(WDF_KraneMybiz, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 43);
@@ -418,7 +418,7 @@ void AnalogCharacter::loadPreset()
             setAll(lowStage,   50.0f, 350.0f, 0.08f, 1);
             setAll(midStage,   12.0f, 100.0f, 0.10f, 1);
             setAll(highStage,   3.0f,  25.0f, 0.06f, 1);
-            setAll(outputStage,30.0f, 250.0f, 0.08f, 1);
+            setAll(outputStage,30.0f, 250.0f, 0.35f, 1);
 
             psmAttack = 0.02f; psmRelease = 0.0005f; psmDepth = 0.015f;
             loadingAmount = 0.3f;
@@ -431,7 +431,7 @@ void AnalogCharacter::loadPreset()
         case ValveTube:
         {
             useWDF = true;
-            wdfMakeupGain = 18.0f;
+            wdfMakeupGain = 2.5f;
             wdfEngine = createWDFEngine(WDF_WestNugget, sr);
             wdfEngine2 = createWDFEngine(WDF_WestNugget, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 44);
@@ -444,7 +444,7 @@ void AnalogCharacter::loadPreset()
             setAll(lowStage,    8.0f,  90.0f, 0.50f, 0, 0.995f);
             setAll(midStage,    4.0f,  55.0f, 0.60f, 0, 0.994f);
             setAll(highStage,   1.5f,  20.0f, 0.30f, 0, 0.997f);
-            setAll(outputStage,15.0f, 140.0f, 0.25f, 0, 0.996f);
+            setAll(outputStage,15.0f, 140.0f, 0.45f, 0, 0.996f);
 
             psmAttack = 0.005f; psmRelease = 0.00015f; psmDepth = 0.05f;
             loadingAmount = 0.7f;
@@ -457,7 +457,7 @@ void AnalogCharacter::loadPreset()
         case PulsetEQ:
         {
             useWDF = true;
-            wdfMakeupGain = 40.0f;
+            wdfMakeupGain = 3.0f;
             wdfEngine = createWDFEngine(WDF_PoolDake, sr);
             wdfEngine2 = createWDFEngine(WDF_PoolDake, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 45);
@@ -470,7 +470,7 @@ void AnalogCharacter::loadPreset()
             setAll(lowStage,   15.0f, 140.0f, 0.30f, 0, 0.997f);
             setAll(midStage,    6.0f,  65.0f, 0.20f, 0, 0.998f);
             setAll(highStage,   2.5f,  25.0f, 0.18f, 0, 0.999f);
-            setAll(outputStage,20.0f, 180.0f, 0.12f, 0, 0.998f);
+            setAll(outputStage,20.0f, 180.0f, 0.35f, 0, 0.998f);
 
             psmAttack = 0.007f; psmRelease = 0.00018f; psmDepth = 0.035f;
             loadingAmount = 0.5f;
@@ -483,7 +483,7 @@ void AnalogCharacter::loadPreset()
         case Console88:
         {
             useWDF = true;
-            wdfMakeupGain = 35.0f;
+            wdfMakeupGain = 3.0f;
             wdfEngine = createWDFEngine(WDF_Never80_8, sr);
             wdfEngine2 = createWDFEngine(WDF_Never80_8, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 46);
@@ -496,7 +496,7 @@ void AnalogCharacter::loadPreset()
             setAll(lowStage,   45.0f, 250.0f, 0.28f, 1);
             setAll(midStage,    8.0f,  70.0f, 0.35f, 3);
             setAll(highStage,   1.5f,  12.0f, 0.15f, 3);
-            setAll(outputStage,25.0f, 220.0f, 0.25f, 1);
+            setAll(outputStage,25.0f, 220.0f, 0.40f, 1);
 
             psmAttack = 0.01f; psmRelease = 0.00025f; psmDepth = 0.03f;
             loadingAmount = 0.55f;
@@ -509,7 +509,7 @@ void AnalogCharacter::loadPreset()
         case GBus:
         {
             useWDF = true;
-            wdfMakeupGain = 50.0f;
+            wdfMakeupGain = 3.5f;
             wdfEngine = createWDFEngine(WDF_LiquidStateSolid, sr);
             wdfEngine2 = createWDFEngine(WDF_LiquidStateSolid, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 47);
@@ -522,7 +522,7 @@ void AnalogCharacter::loadPreset()
             setAll(lowStage,    5.0f,  35.0f, 0.40f, 2);
             setAll(midStage,    2.5f,  20.0f, 0.55f, 2);
             setAll(highStage,   0.8f,   6.0f, 0.30f, 3);
-            setAll(outputStage,10.0f,  50.0f, 0.20f, 2);
+            setAll(outputStage,10.0f,  50.0f, 0.35f, 2);
 
             psmAttack = 0.004f; psmRelease = 0.0001f; psmDepth = 0.045f;
             loadingAmount = 0.65f;
@@ -580,6 +580,10 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
                 modPhase -= juce::MathConstants<float>::twoPi;
             float mod = 1.0f + modAmount * std::sin(modPhase);
             x *= mod;
+
+            // safety soft-clamp to prevent digital overs
+            if (std::abs(x) > 1.0f)
+                x = 0.95f * std::tanh(x / 0.95f);
 
             data[s] = x;
         }
