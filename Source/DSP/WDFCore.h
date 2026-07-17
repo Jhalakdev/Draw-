@@ -42,28 +42,30 @@ public:
     double reflected() override { w.b = 0.0; return w.b; }
 };
 
-class Capacitor : public Base {
-public:
-    double C_val, fs;
-    double z = 0.0;
-    explicit Capacitor(double c, double sr) : C_val(c), fs(sr) { calcImpedance(); }
-    void setValue(double c) { if (c != C_val) { C_val = c; propagateImpedance(); } }
-    void prepare(double sr) { fs = sr; propagateImpedance(); z = 0.0; }
-    void calcImpedance() override { w.R = 1.0 / (2.0 * C_val * fs); w.G = 1.0 / w.R; }
-    void incident(double x) override { w.a = x; z = w.a; }
-    double reflected() override { w.b = z; return w.b; }
-};
-
 class Inductor : public Base {
 public:
     double L_val, fs;
     double z = 0.0;
+    static constexpr double dcLeak = 0.9999995;
     explicit Inductor(double l, double sr) : L_val(l), fs(sr) { calcImpedance(); }
     void setValue(double l) { if (l != L_val) { L_val = l; propagateImpedance(); } }
     void prepare(double sr) { fs = sr; propagateImpedance(); z = 0.0; }
     void calcImpedance() override { w.R = 2.0 * L_val * fs; w.G = 1.0 / w.R; }
     void incident(double x) override { w.a = x; z = w.a; }
-    double reflected() override { w.b = -z; return w.b; }
+    double reflected() override { w.b = -z; z *= dcLeak; return w.b; }
+};
+
+class Capacitor : public Base {
+public:
+    double C_val, fs;
+    double z = 0.0;
+    static constexpr double dcLeak = 0.9999995;
+    explicit Capacitor(double c, double sr) : C_val(c), fs(sr) { calcImpedance(); }
+    void setValue(double c) { if (c != C_val) { C_val = c; propagateImpedance(); } }
+    void prepare(double sr) { fs = sr; propagateImpedance(); z = 0.0; }
+    void calcImpedance() override { w.R = 1.0 / (2.0 * C_val * fs); w.G = 1.0 / w.R; }
+    void incident(double x) override { w.a = x; z = w.a; }
+    double reflected() override { w.b = z; z *= dcLeak; return w.b; }
 };
 
 // ============ Adaptors ============

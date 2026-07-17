@@ -545,12 +545,20 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
     float modInc = juce::MathConstants<float>::twoPi * 0.15f / sr;
     auto& wdf = (channel == 0 && wdfEngine) ? *wdfEngine
                : (wdfEngine2 ? *wdfEngine2 : *wdfEngine);
+    float dcCoeff = 1.0f - 10.0f / sr; // ~10 Hz high-pass
 
     if (useWDF && wdfEngine)
     {
         for (int s = 0; s < numSamples; ++s)
         {
             float x = data[s];
+
+            // ===== DC BLOCKER (remove offset before WDF) =====
+            float prevX = dcPrevX[channel];
+            dcPrevX[channel] = x;
+            float blocked = x - prevX + dcCoeff * dcBlockerZ[channel];
+            dcBlockerZ[channel] = blocked;
+            x = blocked;
 
             // ===== WDF PASSIVE EQ (4-band LC circuit) =====
             x = wdf.process(x);

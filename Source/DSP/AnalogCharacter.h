@@ -104,6 +104,9 @@ private:
     float wdfTolerance = 10.0f;
     bool useWDF = false;
     float wdfMakeupGain = 10.0f;
+    float dcBlockerZ[2] = { 0.0f, 0.0f };
+    float dcPrevX[2] = { 0.0f, 0.0f };
+    float charBlendSmooth = 0.0f;
 
     static constexpr int DelayLen = 64;
     float delayBuf[DelayLen] = { 0 };
