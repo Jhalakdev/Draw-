@@ -251,13 +251,17 @@ void EQGraphComponent::drawSpectrum(juce::Graphics& g)
         float y = graphY + graphH - height;
         float t = static_cast<float>(i) / static_cast<float>(NumSpectrumBins);
         float hue = 0.58f - t * 0.38f;
-        float alpha = 0.06f + spectrumData[i] * 0.6f;
-        g.setColour(juce::Colour::fromHSV(hue, 0.9f, 0.6f, alpha));
-        g.fillRect(x - barW * 0.35f, y, barW * 0.7f, height);
-        if (spectrumData[i] > 0.3f)
+        float hiBoost = 0.5f + t * 0.5f;
+        float alpha = 0.15f + spectrumData[i] * hiBoost;
+        alpha = juce::jmin(alpha, 0.95f);
+        g.setColour(juce::Colour::fromHSV(hue, 0.9f, 0.8f, alpha));
+        float barWScale = 0.6f + t * 0.3f;
+        g.fillRect(x - barW * barWScale * 0.5f, y, barW * barWScale, height);
+        if (spectrumData[i] > 0.15f)
         {
-            g.setColour(juce::Colour::fromHSV(hue, 0.7f, 0.8f, alpha * 0.3f));
-            g.fillRect(x - barW * 0.45f, y - 1.0f, barW * 0.9f, height + 2.0f);
+            g.setColour(juce::Colour::fromHSV(hue, 0.6f, 1.0f, alpha * 0.35f));
+            float glowW = barW * (barWScale + 0.2f);
+            g.fillRect(x - glowW * 0.5f, y - 1.0f, glowW, height + 2.0f);
         }
     }
 }
