@@ -125,6 +125,17 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
     charBlendLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(charBlendLabel);
 
+    emulationLabel.setText("EMULATION", juce::dontSendNotification);
+    emulationLabel.setColour(juce::Label::textColourId, LF::textDim);
+    emulationLabel.setFont(7.0f);
+    emulationLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(emulationLabel);
+
+    // Style blend slider visibly
+    charBlendSlider.setColour(juce::Slider::trackColourId, LF::accentGold.withAlpha(0.4f));
+    charBlendSlider.setColour(juce::Slider::thumbColourId, LF::accentGold);
+    charBlendSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel.brighter(0.1f));
+
     noteLabel.setText("--", juce::dontSendNotification);
     noteLabel.setColour(juce::Label::textColourId, LF::accentGold);
     noteLabel.setFont(24.0f);
@@ -331,7 +342,7 @@ void PitchFollowEQAudioProcessorEditor::timerCallback()
 
     statusLabel.setText(tracking ? (bypass ? "BYPASSED" : "ACTIVE") : "IDLE", juce::dontSendNotification);
     statusLabel.setColour(juce::Label::textColourId,
-                          bypass ? LF::accentRed : (tracking ? LF::accentTeal : LF::textDim));
+                          bypass ? LF::accentRed : (tracking ? LF::accentTeal : LF::accentRed));
 
     auto& env = processorRef.getEngine().getEnvelope();
     if (env.isAudioDirty())
@@ -377,10 +388,6 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(15.0f).boldened());
     g.drawText("Curvex", juce::Rectangle<int>(12, 2, 64, 22),
                juce::Justification::centredLeft);
-    g.setColour(LF::textMuted);
-    g.setFont(juce::Font(9.0f));
-    g.drawText("Draw EQ " BUILD_VERSION, juce::Rectangle<int>(12, 22, 100, 16),
-               juce::Justification::centredLeft);
 
     // Separator lines between groups
     g.setColour(LF::border);
@@ -411,65 +418,71 @@ void PitchFollowEQAudioProcessorEditor::resized()
     int btnH = 20;
 
     // ===== HEADER =====
-    int x = 88;
+    int x = 80;
 
-    // Group 1: SPECTRUM + BYPASS
-    trackingBtn.setBounds(x, btnY, 64, btnH);
-    x += 68;
+    // Group 1: FUNDAMENTAL + BYPASS
+    trackingBtn.setBounds(x, btnY, 76, btnH);
+    x += 80;
     bypassBtn.setBounds(x, btnY, 52, btnH);
     x += 64;
 
-    // Group 2: Character combo + BLEND
-    charCombo.setBounds(x, btnY, 108, btnH);
-    x += 112;
-    charBlendSlider.setBounds(x, btnY + 2, 48, btnH - 4);
-    charBlendLabel.setBounds(x, btnY - 8, 48, 10);
-    x += 56;
+    // Group 2: Emulation combo + BLEND (bigger)
+    charCombo.setBounds(x, btnY, 86, btnH);
+    emulationLabel.setBounds(x, btnY - 8, 86, 8);
+    x += 90;
+    charBlendSlider.setBounds(x, btnY - 2, 72, btnH + 8);
+    charBlendLabel.setBounds(x, btnY - 12, 72, 10);
+    x += 80;
 
-    // Group 3: Undo/Redo/Clear
-    undoBtn.setBounds(x, btnY, 38, btnH);
+    // Group 3: AUTO GAIN
+    autoGainBtn.setBounds(x, btnY, 64, btnH);
+    x += 72;
+
+    // Group 4: Undo/Redo/Clear
+    undoBtn.setBounds(x, btnY, 34, btnH);
+    x += 38;
+    redoBtn.setBounds(x, btnY, 34, btnH);
+    x += 38;
+    clearBtn.setBounds(x, btnY, 34, btnH);
     x += 42;
-    redoBtn.setBounds(x, btnY, 38, btnH);
-    x += 42;
-    clearBtn.setBounds(x, btnY, 38, btnH);
-    x += 50;
 
     // Pitch info right side
-    auto pitchArea = header.removeFromRight(160);
+    auto pitchArea = header.removeFromRight(148);
     int px = pitchArea.getX();
-    noteLabel.setBounds(px, 4, 44, 34);
-    pitchLabel.setBounds(px + 44, 6, 70, 14);
-    statusLabel.setBounds(px + 44, 20, 70, 12);
-
-    // ===== LEFT: Phase combo below brand =====
-    phaseCombo.setBounds(10, 50, 110, 20);
+    noteLabel.setBounds(px, 2, 44, 34);
+    pitchLabel.setBounds(px + 44, 4, 70, 14);
+    statusLabel.setBounds(px + 44, 18, 70, 12);
 
     // ===== RIGHT SIDEBAR =====
-    auto sidebar = area.removeFromRight(72);
-    auto meterArea = sidebar.removeFromTop(sidebar.getHeight() * 0.55f);
+    auto sidebar = area.removeFromRight(76);
+    auto meterArea = sidebar.removeFromTop(sidebar.getHeight() * 0.65f);
     levelMeter.setBounds(meterArea.reduced(2));
 
-    // Auto Gain button above gain slider
-    auto agArea = sidebar.removeFromTop(28);
-    autoGainBtn.setBounds(agArea.reduced(4, 4));
+    gainSlider.setSliderStyle(juce::Slider::LinearVertical);
+    gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 36, 12);
+    gainSlider.setColour(juce::Slider::trackColourId, LF::accentTeal.withAlpha(0.5f));
+    gainSlider.setColour(juce::Slider::thumbColourId, LF::accentTeal);
+    gainSlider.setColour(juce::Slider::textBoxTextColourId, LF::textBright);
+    gainSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::transparentBlack);
+    gainSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+    gainSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel);
+    gainSlider.setBounds(sidebar.withTrimmedTop(4).reduced(3));
+    gainLabel.setText("MASTER", juce::dontSendNotification);
+    gainLabel.setBounds(sidebar.getX() - 2, sidebar.getY() - 12, 80, 10);
 
-    gainSlider.setBounds(sidebar.withTrimmedTop(4).reduced(4));
-    gainLabel.setBounds(sidebar.getX() - 4, sidebar.getY() - 12, 72, 10);
+    // ===== GRAPH AREA (leave room for bottom controls) =====
+    auto graphArea = area.reduced(6, 4);
+    graphArea.removeFromBottom(32);
 
-    // Sync AG toggle state position
-    bool autoGainOn = processorRef.getAPVTS().getRawParameterValue("autoGain")->load() > 0.5f;
-    autoGainBtn.setToggleState(autoGainOn, juce::dontSendNotification);
+    // Phase combo at bottom-right of graph
+    phaseCombo.setBounds(graphArea.getRight() - 130, getHeight() - 24, 130, 20);
 
-    // ===== BOTTOM: M/S combo centered =====
-    int msW = 140;
-    int msH = 20;
-    msCombo.setBounds((getWidth() - msW) / 2, getHeight() - 26, msW, msH);
+    // M/S combo at bottom-left of graph
+    msCombo.setBounds(graphArea.getX(), getHeight() - 24, 130, 20);
 
     // ===== ZONE STRIP + GRAPH =====
     int zoneH = 36;
     bool showZone = zonePanel.isVisible();
-    auto graphArea = area.reduced(6, 4);
-    graphArea.removeFromBottom(30); // space for bottom M/S combo
 
     if (showZone)
     {

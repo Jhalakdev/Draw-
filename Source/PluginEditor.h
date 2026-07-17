@@ -4,7 +4,7 @@
 #include "UI/EQGraphComponent.h"
 #include "UI/LevelMeterComponent.h"
 
-#define BUILD_VERSION "v22"
+#define BUILD_VERSION "v23"
 
 class PitchFollowEQLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -51,9 +51,9 @@ private:
     EQGraphComponent eqGraph;
     LevelMeterComponent levelMeter;
 
-    juce::TextButton trackingBtn { "SPECTRUM" };
+    juce::TextButton trackingBtn { "FUNDAMENTAL" };
     juce::TextButton bypassBtn   { "BYPASS" };
-    juce::TextButton autoGainBtn { "AG" };
+    juce::TextButton autoGainBtn { "AUTO GAIN" };
     juce::TextButton undoBtn     { "UNDO" };
     juce::TextButton redoBtn     { "REDO" };
     juce::TextButton clearBtn    { "CLEAR" };
@@ -67,6 +67,7 @@ private:
     juce::Slider charBlendSlider;
     juce::Label charBlendLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> charBlendAttachment;
+    juce::Label emulationLabel;
 
     juce::Label gainLabel;
     juce::Slider gainSlider;

@@ -91,7 +91,7 @@ void EQGraphComponent::paint(juce::Graphics& g)
                    juce::Justification::centredLeft, false);
     }
 
-    g.setColour(juce::Colour(0xFF555570));
+    g.setColour(juce::Colour(0xFF6A6A88));
     g.setFont(juce::Font(9.0f));
     float freqLabels[] = { 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000 };
     for (float f : freqLabels)
@@ -100,7 +100,7 @@ void EQGraphComponent::paint(juce::Graphics& g)
         if (x >= graphX && x <= graphX + graphW)
         {
             juce::String label = f >= 1000 ? juce::String(f / 1000.0f, 1) + "k" : juce::String(f, 0);
-            g.setColour(juce::Colour(0xFF555570));
+            g.setColour(juce::Colour(0xFF6A6A88));
             g.drawText(label, juce::Rectangle<int>(static_cast<int>(x) - 20, static_cast<int>(graphY + graphH) + 5, 40, 14),
                        juce::Justification::centred, false);
         }
@@ -110,7 +110,7 @@ void EQGraphComponent::paint(juce::Graphics& g)
     {
         float y = getYForGain(gv);
         juce::String gainLabel = (gv > 0 ? "+" : "") + juce::String(gv, 0) + " dB";
-        g.setColour(juce::Colour(0xFF555570));
+        g.setColour(juce::Colour(0xFF6A6A88));
         g.setFont(juce::Font(9.0f));
         g.drawText(gainLabel, juce::Rectangle<int>(static_cast<int>(graphX) - 50, static_cast<int>(y) - 7, 46, 14),
                    juce::Justification::centredRight, false);
@@ -143,7 +143,7 @@ void EQGraphComponent::paint(juce::Graphics& g)
 
 void EQGraphComponent::drawGrid(juce::Graphics& g)
 {
-    g.setColour(juce::Colour(0xFF161628));
+    g.setColour(juce::Colour(0xFF1E1E38));
     for (float gv = MinGain; gv <= MaxGain; gv += 3.0f)
     {
         float y = getYForGain(gv);
@@ -158,7 +158,7 @@ void EQGraphComponent::drawGrid(juce::Graphics& g)
         g.drawVerticalLine(static_cast<int>(x), graphY, graphY + graphH);
     }
 
-    g.setColour(juce::Colour(0xFF2A2A44));
+    g.setColour(juce::Colour(0xFF3A3A5A));
     float zeroY = getYForGain(0.0f);
     g.drawHorizontalLine(static_cast<int>(zeroY), graphX, graphX + graphW);
 }
