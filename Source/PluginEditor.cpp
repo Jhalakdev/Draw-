@@ -86,34 +86,17 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
     phaseAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         processorRef.getAPVTS(), "phaseMode", phaseCombo);
 
-    auto setupMSBtn = [this](juce::TextButton& btn)
-    {
-        btn.setColour(juce::TextButton::buttonColourId, LF::bgPanel);
-        btn.setColour(juce::TextButton::buttonOnColourId, LF::accentTeal.withAlpha(0.7f));
-        btn.setColour(juce::TextButton::textColourOffId, LF::textMuted);
-        btn.setColour(juce::TextButton::textColourOnId, LF::textBright);
-        btn.setClickingTogglesState(true);
-        btn.setRadioGroupId(200, juce::NotificationType::dontSendNotification);
-        btn.setLookAndFeel(&lnf);
-        addAndMakeVisible(btn);
-    };
-    setupMSBtn(msStereoBtn);
-    setupMSBtn(msMidBtn);
-    setupMSBtn(msSideBtn);
-    setupMSBtn(msLeftBtn);
-    setupMSBtn(msRightBtn);
-    msStereoBtn.setToggleState(true, juce::dontSendNotification);
-
-    auto msClick = [this](int mode)
-    {
-        processorRef.getAPVTS().getParameter("msMode")->setValueNotifyingHost(
-            static_cast<float>(mode) / 4.0f);
-    };
-    msStereoBtn.onClick = [msClick]() { msClick(0); };
-    msMidBtn.onClick    = [msClick]() { msClick(1); };
-    msSideBtn.onClick   = [msClick]() { msClick(2); };
-    msLeftBtn.onClick   = [msClick]() { msClick(3); };
-    msRightBtn.onClick  = [msClick]() { msClick(4); };
+    msCombo.setEditableText(false);
+    msCombo.addItemList({ "Stereo", "Mid Only", "Side Only", "Left Only", "Right Only" }, 1);
+    msCombo.setSelectedItemIndex(0);
+    msCombo.setColour(juce::ComboBox::backgroundColourId, LF::bgPanel);
+    msCombo.setColour(juce::ComboBox::textColourId, LF::textBright);
+    msCombo.setColour(juce::ComboBox::arrowColourId, LF::textMuted);
+    msCombo.setColour(juce::ComboBox::outlineColourId, LF::border);
+    msCombo.setColour(juce::ComboBox::buttonColourId, LF::bgPanel);
+    addAndMakeVisible(msCombo);
+    msAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        processorRef.getAPVTS(), "msMode", msCombo);
 
     charCombo.setEditableText(false);
     charCombo.addItemList({ "Off", "Mister Passive", "Krane Mybiz", "West Nugget", "Pool Dake", "Never 80-8", "Liquid State Solid" }, 1);
@@ -276,11 +259,6 @@ PitchFollowEQAudioProcessorEditor::~PitchFollowEQAudioProcessorEditor()
     charBlendSlider.setLookAndFeel(nullptr);
     zoneDynBtn.setLookAndFeel(nullptr);
     zoneDeleteBtn.setLookAndFeel(nullptr);
-    msStereoBtn.setLookAndFeel(nullptr);
-    msMidBtn.setLookAndFeel(nullptr);
-    msSideBtn.setLookAndFeel(nullptr);
-    msLeftBtn.setLookAndFeel(nullptr);
-    msRightBtn.setLookAndFeel(nullptr);
     setLookAndFeel(nullptr);
     stopTimer();
 }
@@ -355,12 +333,6 @@ void PitchFollowEQAudioProcessorEditor::timerCallback()
     statusLabel.setColour(juce::Label::textColourId,
                           bypass ? LF::accentRed : (tracking ? LF::accentTeal : LF::textDim));
 
-    msStereoBtn.setToggleState(msMode == 0, juce::dontSendNotification);
-    msMidBtn.setToggleState(msMode == 1, juce::dontSendNotification);
-    msSideBtn.setToggleState(msMode == 2, juce::dontSendNotification);
-    msLeftBtn.setToggleState(msMode == 3, juce::dontSendNotification);
-    msRightBtn.setToggleState(msMode == 4, juce::dontSendNotification);
-
     auto& env = processorRef.getEngine().getEnvelope();
     if (env.isAudioDirty())
     {
@@ -411,10 +383,7 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(LF::border);
     int h2 = 44;
     g.drawVerticalLine(216, 10, h2 - 10);
-    g.drawVerticalLine(324, 10, h2 - 10);
-    g.drawVerticalLine(442, 10, h2 - 10);
-    g.drawVerticalLine(572, 10, h2 - 10);
-    g.drawVerticalLine(getWidth() - 166, 10, h2 - 10);
+    g.drawVerticalLine(getWidth() - 176, 10, h2 - 10);
 }
 
 void PitchFollowEQAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
@@ -438,45 +407,29 @@ void PitchFollowEQAudioProcessorEditor::resized()
     int btnY = 12;
     int btnH = 20;
 
+    // ===== HEADER =====
     int x = 88;
 
-    // Group 1: SPECTRUM + BYPASS + AUTOGAIN
+    // Group 1: SPECTRUM + BYPASS
     trackingBtn.setBounds(x, btnY, 64, btnH);
     x += 68;
     bypassBtn.setBounds(x, btnY, 52, btnH);
+    x += 64;
+
+    // Group 2: Character combo + BLEND
+    charCombo.setBounds(x, btnY, 108, btnH);
+    x += 112;
+    charBlendSlider.setBounds(x, btnY + 2, 48, btnH - 4);
+    charBlendLabel.setBounds(x, btnY - 8, 48, 10);
     x += 56;
-    autoGainBtn.setBounds(x, btnY, 28, btnH);
-    x += 36;
 
-    // Group 2: Phase combo box
-    phaseCombo.setBounds(x, btnY, 102, btnH);
-    x += 110;
-
-    // Group 3: M/S buttons
-    msStereoBtn.setBounds(x, btnY, 24, btnH);
-    x += 26;
-    msMidBtn.setBounds(x, btnY, 20, btnH);
-    x += 22;
-    msSideBtn.setBounds(x, btnY, 20, btnH);
-    x += 22;
-    msLeftBtn.setBounds(x, btnY, 20, btnH);
-    x += 22;
-    msRightBtn.setBounds(x, btnY, 20, btnH);
-    x += 28;
-
-    // Group 4: Undo/Redo/Clear
+    // Group 3: Undo/Redo/Clear
     undoBtn.setBounds(x, btnY, 38, btnH);
     x += 42;
     redoBtn.setBounds(x, btnY, 38, btnH);
     x += 42;
     clearBtn.setBounds(x, btnY, 38, btnH);
     x += 50;
-
-    charCombo.setBounds(x, btnY, 108, btnH);
-    x += 112;
-    charBlendSlider.setBounds(x, btnY + 2, 48, btnH - 4);
-    charBlendLabel.setBounds(x, btnY - 8, 48, 10);
-    x += 56;
 
     // Pitch info right side
     auto pitchArea = header.removeFromRight(160);
@@ -485,17 +438,36 @@ void PitchFollowEQAudioProcessorEditor::resized()
     pitchLabel.setBounds(px + 44, 6, 70, 14);
     statusLabel.setBounds(px + 44, 20, 70, 12);
 
-    // Sidebar
+    // ===== LEFT: Phase combo below brand =====
+    phaseCombo.setBounds(10, 50, 110, 20);
+
+    // ===== RIGHT SIDEBAR =====
     auto sidebar = area.removeFromRight(72);
-    auto meterArea = sidebar.removeFromTop(sidebar.getHeight() * 0.65f);
+    auto meterArea = sidebar.removeFromTop(sidebar.getHeight() * 0.55f);
     levelMeter.setBounds(meterArea.reduced(2));
-    gainSlider.setBounds(sidebar.withTrimmedTop(0).reduced(4));
+
+    // Auto Gain button above gain slider
+    auto agArea = sidebar.removeFromTop(28);
+    autoGainBtn.setBounds(agArea.reduced(4, 4));
+
+    gainSlider.setBounds(sidebar.withTrimmedTop(4).reduced(4));
     gainLabel.setBounds(sidebar.getX() - 4, sidebar.getY() - 12, 72, 10);
 
-    // Zone strip + graph
+    // Sync AG toggle state position
+    bool autoGainOn = processorRef.getAPVTS().getRawParameterValue("autoGain")->load() > 0.5f;
+    autoGainBtn.setToggleState(autoGainOn, juce::dontSendNotification);
+
+    // ===== BOTTOM: M/S combo centered =====
+    int msW = 140;
+    int msH = 20;
+    msCombo.setBounds((getWidth() - msW) / 2, getHeight() - 26, msW, msH);
+
+    // ===== ZONE STRIP + GRAPH =====
     int zoneH = 36;
     bool showZone = zonePanel.isVisible();
-    auto graphArea = area.reduced(6, 6);
+    auto graphArea = area.reduced(6, 4);
+    graphArea.removeFromBottom(30); // space for bottom M/S combo
+
     if (showZone)
     {
         auto bottomStrip = graphArea.removeFromBottom(zoneH);

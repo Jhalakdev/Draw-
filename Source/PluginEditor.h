@@ -76,11 +76,8 @@ private:
     juce::ComboBox phaseCombo;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> phaseAttachment;
 
-    juce::TextButton msStereoBtn { "ST" };
-    juce::TextButton msMidBtn    { "M" };
-    juce::TextButton msSideBtn   { "S" };
-    juce::TextButton msLeftBtn   { "L" };
-    juce::TextButton msRightBtn  { "R" };
+    juce::ComboBox msCombo;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> msAttachment;
 
     // Zone controls panel
     juce::Component zonePanel;
