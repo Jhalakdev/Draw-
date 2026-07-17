@@ -13,7 +13,8 @@ public:
     void prepare(double sampleRate, int samplesPerBlock);
     void process(float* channelData, int numSamples);
 
-    void setEnabled(bool shouldBeEnabled) { enabled = shouldBeEnabled; }
+    void setEnabled(bool shouldBeEnabled) { enabled = shouldBeEnabled; if (!enabled) { blockCounter = 0; detectionRunThisBlock = false; } }
+    void resetBlockDetection() { detectionRunThisBlock = false; }
     bool isEnabled() const { return enabled; }
 
     void setSensitivity(float s) { sensitivity = juce::jlimit(0.1f, 1.0f, s); }
@@ -44,6 +45,9 @@ private:
     PitchDetector pitchDetector;
     GainEnvelope envelope;
     bool enabled = false;
+    int blockCounter = 0;
+    bool detectionRunThisBlock = false;
+    static constexpr int DetectInterval = 8;
     float sensitivity = 0.5f;
     float trackingSpeed = 0.3f;
     float intensity = 0.6f;

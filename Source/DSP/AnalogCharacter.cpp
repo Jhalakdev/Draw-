@@ -1,5 +1,6 @@
 #include "AnalogCharacter.h"
 #include <algorithm>
+#include <cmath>
 
 AnalogCharacter::AnalogCharacter() {}
 
@@ -330,6 +331,40 @@ float AnalogCharacter::saturateOpamp(float x, float drive) const
     return out * norm * 0.9f;
 }
 
+float AnalogCharacter::saturateClean(float x, float drive) const
+{
+    if (drive < 0.001f) return x;
+    float y = x * drive;
+    return std::tanh(y);
+}
+
+float AnalogCharacter::saturateTubeAggressive(float x, float drive) const
+{
+    if (drive < 0.001f) return x;
+    float d = drive * 2.0f;
+    float y = x * d;
+    float pos = y > 0 ? y / (1.0f + y * 0.7f) : 0.0f;
+    float neg = y < 0 ? y / (1.0f + std::abs(y) * 0.9f) : 0.0f;
+    float out = pos + neg;
+    out += 0.08f * out * out;
+    out += 0.02f * out * out * out;
+    float norm = (d > 0.1f) ? (1.0f / std::tanh(d * 0.6f)) : 1.0f;
+    return out * norm * 0.9f;
+}
+
+float AnalogCharacter::saturateConsole(float x, float drive) const
+{
+    if (drive < 0.001f) return x;
+    float d = drive * 1.5f;
+    float y = x * d;
+    float ySq = y * y;
+    float core = y / (1.0f + ySq * 0.5f);
+    float harm = y * ySq * 0.06f;
+    float out = core + harm;
+    float norm = (d > 0.1f) ? (1.0f / (std::tanh(d * 0.5f) * 1.1f)) : 1.0f;
+    return out * norm;
+}
+
 float AnalogCharacter::saturate(int type, float x, float drive) const
 {
     switch (type) {
@@ -370,7 +405,7 @@ void AnalogCharacter::loadPreset()
         case FormPassive:
         {
             useWDF = true;
-            wdfMakeupGain = 3.0f;
+            wdfMakeupGain = 1.2f;
             wdfEngine = createWDFEngine(WDF_MisterPassive, sr);
             wdfEngine2 = createWDFEngine(WDF_MisterPassive, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 42);
@@ -392,7 +427,7 @@ void AnalogCharacter::loadPreset()
         case CraneSong:
         {
             useWDF = true;
-            wdfMakeupGain = 3.0f;
+            wdfMakeupGain = 1.2f;
             wdfEngine = createWDFEngine(WDF_KraneMybiz, sr);
             wdfEngine2 = createWDFEngine(WDF_KraneMybiz, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 43);
@@ -414,7 +449,7 @@ void AnalogCharacter::loadPreset()
         case ValveTube:
         {
             useWDF = true;
-            wdfMakeupGain = 2.5f;
+            wdfMakeupGain = 1.0f;
             wdfEngine = createWDFEngine(WDF_WestNugget, sr);
             wdfEngine2 = createWDFEngine(WDF_WestNugget, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 44);
@@ -436,7 +471,7 @@ void AnalogCharacter::loadPreset()
         case PulsetEQ:
         {
             useWDF = true;
-            wdfMakeupGain = 3.0f;
+            wdfMakeupGain = 1.2f;
             wdfEngine = createWDFEngine(WDF_PoolDake, sr);
             wdfEngine2 = createWDFEngine(WDF_PoolDake, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 45);
@@ -458,7 +493,7 @@ void AnalogCharacter::loadPreset()
         case Console88:
         {
             useWDF = true;
-            wdfMakeupGain = 3.0f;
+            wdfMakeupGain = 1.2f;
             wdfEngine = createWDFEngine(WDF_Never80_8, sr);
             wdfEngine2 = createWDFEngine(WDF_Never80_8, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 46);
@@ -480,7 +515,7 @@ void AnalogCharacter::loadPreset()
         case GBus:
         {
             useWDF = true;
-            wdfMakeupGain = 3.5f;
+            wdfMakeupGain = 1.4f;
             wdfEngine = createWDFEngine(WDF_LiquidStateSolid, sr);
             wdfEngine2 = createWDFEngine(WDF_LiquidStateSolid, sr);
             wdfEngine2->randomizeTolerance(wdfTolerance, 47);
@@ -508,86 +543,61 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
 {
     if (currentType == Off) return;
 
-    float sr = (float)sampleRate;
-    auto& wdf = (channel == 0 && wdfEngine) ? *wdfEngine
-               : (wdfEngine2 ? *wdfEngine2 : *wdfEngine);
-    float dcCoeff = 1.0f - 10.0f / sr; // ~10 Hz high-pass
+    float d = drive * 0.44f;
+    float wet = d;
+    float pre = 1.0f + d * 7.0f;
 
-    if (useWDF && wdfEngine)
+    for (int s = 0; s < numSamples; ++s)
     {
-        for (int s = 0; s < numSamples; ++s)
+        float x = data[s];
+        float ax = std::abs(x);
+        float shaped = x;
+        float harm = 0.0f;
+
+        switch (currentType)
         {
-            float x = data[s];
-
-            // ===== DC BLOCKER =====
-            float prevX = dcPrevX[channel];
-            dcPrevX[channel] = x;
-            float blocked = x - prevX + dcCoeff * dcBlockerZ[channel];
-            dcBlockerZ[channel] = blocked;
-            x = blocked;
-
-            // ===== WDF =====
-            x = wdf.process(x);
-            x *= wdfMakeupGain;
-
-            // ===== STATIC SATURATION =====
-            {
-                float drive = outputStage.baseDrive * 1.5f;
-                x = std::tanh(x * drive);
-                float norm = drive > 0.1f ? 1.0f / std::tanh(drive * 0.8f) : 1.0f;
-                x *= norm * 0.92f;
+            case FormPassive: {
+                if (ax > 1e-8f)
+                    shaped = x / std::pow(1.0f + std::pow(ax * pre, 2.0f), 0.5f);
+                harm = 0.04f * shaped * std::abs(shaped);
+                break;
             }
-
-            if (std::abs(x) > 1.0f)
-                x = 0.95f * std::tanh(x / 0.95f);
-
-            data[s] = x;
+            case CraneSong: {
+                shaped = std::tanh(x * pre) / pre;
+                break;
+            }
+            case ValveTube: {
+                if (ax > 1e-8f) {
+                    float k = 2.0f;
+                    if (x > 0.0f)
+                        shaped = x / std::pow(1.0f + std::pow(ax * pre, k), 1.0f / k);
+                    else
+                        shaped = x / std::pow(1.0f + std::pow(ax * pre * 0.5f, k), 1.0f / k);
+                }
+                harm = 0.08f * shaped * std::abs(shaped) + 0.03f * shaped * shaped * shaped;
+                break;
+            }
+            case PulsetEQ: {
+                float g = 1.0f + d * 6.0f;
+                shaped = x + g * 0.5f * x * x * x / (1.0f + g * ax * ax);
+                break;
+            }
+            case Console88: {
+                if (ax > 1e-8f)
+                    shaped = x / std::pow(1.0f + std::pow(ax * pre, 2.5f), 0.4f);
+                harm = 0.03f * shaped * std::abs(shaped) + 0.02f * shaped * shaped * shaped;
+                break;
+            }
+            case GBus: {
+                if (ax > 1e-8f)
+                    shaped = x / std::pow(1.0f + std::pow(ax * pre * 0.5f, 3.0f), 1.0f / 3.0f);
+                harm = 0.02f * shaped * shaped * shaped;
+                break;
+            }
+            default: break;
         }
-    }
-    else
-    {
-        for (int s = 0; s < numSamples; ++s)
-        {
-            float x = data[s];
 
-            // ===== INPUT STAGE =====
-            x = inputStage.process(x, inputStage.satType, inputStage.baseDrive, 1.0f, 0.0f);
-
-            // ===== FILTER GROUP 1 (Lows) =====
-            float loadFromPrev = inputStage.loading * loadingAmount;
-            if (filterCount > 0)
-            {
-                int end = juce::jmin(3, filterCount);
-                for (int i = 0; i < end; ++i)
-                    x = filters[i].process(x);
-                x = lowStage.process(x, lowStage.satType, lowStage.baseDrive, 1.0f, loadFromPrev);
-            }
-
-            // ===== FILTER GROUP 2 (Mids) =====
-            loadFromPrev = lowStage.loading * loadingAmount;
-            if (filterCount > 3)
-            {
-                int end = juce::jmin(5, filterCount);
-                for (int i = 3; i < end; ++i)
-                    x = filters[i].process(x);
-                x = midStage.process(x, midStage.satType, midStage.baseDrive, 1.0f, loadFromPrev);
-            }
-
-            // ===== FILTER GROUP 3 (Highs) =====
-            loadFromPrev = midStage.loading * loadingAmount;
-            if (filterCount > 5)
-            {
-                for (int i = 5; i < filterCount; ++i)
-                    x = filters[i].process(x);
-                x = highStage.process(x, highStage.satType, highStage.baseDrive, 1.0f, loadFromPrev);
-            }
-
-            // ===== OUTPUT STAGE =====
-            loadFromPrev = highStage.loading * loadingAmount;
-            x = outputStage.process(x, outputStage.satType, outputStage.baseDrive, 1.0f, loadFromPrev);
-
-            data[s] = x;
-        }
+        data[s] = x * (1.0f - wet) + (shaped + harm * 0.4f * d) * wet;
     }
 }
 

@@ -35,12 +35,30 @@ float PitchDetector::detect(const float* input, int numSamples)
 
 float PitchDetector::autocorrelate(const float* input, int numSamples)
 {
-    int minLag = static_cast<int>(sampleRate / MaxFrequency);
-    int maxLag = static_cast<int>(sampleRate / MinFrequency);
+    static constexpr int Decimation = 4;
+    static constexpr int MaxDecimated = 128;
+
+    int decimatedCount = numSamples / Decimation;
+    if (decimatedCount < 8) return 0.0f;
+    if (decimatedCount > MaxDecimated) decimatedCount = MaxDecimated;
+
+    float decimated[MaxDecimated];
+    for (int i = 0; i < decimatedCount; ++i)
+    {
+        float sum = 0.0f;
+        for (int j = 0; j < Decimation; ++j)
+            sum += input[i * Decimation + j];
+        decimated[i] = sum * 0.25f;
+    }
+
+    float effectiveSr = static_cast<float>(sampleRate) * (1.0f / static_cast<float>(Decimation));
+    int minLag = static_cast<int>(effectiveSr / MaxFrequency);
+    int maxLag = static_cast<int>(effectiveSr / MinFrequency);
     int bufSize = static_cast<int>(correlationBuffer.size());
 
-    if (maxLag >= bufSize)
-        maxLag = bufSize - 1;
+    if (minLag < 1) minLag = 1;
+    if (maxLag >= bufSize) maxLag = bufSize - 1;
+    if (maxLag >= decimatedCount) maxLag = decimatedCount - 1;
 
     float bestCorr = 0.0f;
     int bestLag = 0;
@@ -50,20 +68,20 @@ float PitchDetector::autocorrelate(const float* input, int numSamples)
         float corr = 0.0f;
         float energy1 = 0.0f;
         float energy2 = 0.0f;
-        int count = numSamples - lag;
-
-        if (count <= 0) continue;
+        int count = decimatedCount - lag;
 
         for (int i = 0; i < count; ++i)
         {
-            corr += input[i] * input[i + lag];
-            energy1 += input[i] * input[i];
-            energy2 += input[i + lag] * input[i + lag];
+            corr += decimated[i] * decimated[i + lag];
+            energy1 += decimated[i] * decimated[i];
+            energy2 += decimated[i + lag] * decimated[i + lag];
         }
 
         float norm = std::sqrt(energy1 * energy2);
         if (norm > 0.0f)
             corr /= norm;
+
+        correlationBuffer[static_cast<size_t>(lag)] = corr;
 
         if (corr > bestCorr)
         {
@@ -76,7 +94,7 @@ float PitchDetector::autocorrelate(const float* input, int numSamples)
     {
         float refined = parabolicInterpolation(nullptr, bestLag, 0);
         if (refined > 0)
-            return static_cast<float>(sampleRate) / refined;
+            return effectiveSr / refined;
     }
 
     return 0.0f;

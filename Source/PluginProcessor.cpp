@@ -5,7 +5,6 @@ PitchFollowEQAudioProcessor::PitchFollowEQAudioProcessor()
     : AudioProcessor(BusesProperties()
           .withInput("Input", juce::AudioChannelSet::stereo(), true)
           .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      spectrumAnalyzer(),
       apvts(*this, nullptr, juce::Identifier("DrawEQ"), createParameterLayout())
 {
     engine.getEqualizer().setEnvelope(&engine.getEnvelope());
@@ -66,6 +65,7 @@ void PitchFollowEQAudioProcessor::prepareToPlay(double sampleRate, int samplesPe
     if (sampleRate != lastSampleRate || samplesPerBlock != lastSamplesPerBlock || !prepared)
     {
         engine.prepare(sampleRate, samplesPerBlock);
+        fftAnalyzer.prepare(sampleRate);
         lastSampleRate = sampleRate;
         lastSamplesPerBlock = samplesPerBlock;
         prepared = true;
@@ -94,7 +94,7 @@ void PitchFollowEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     engine.setIntensity(apvts.getRawParameterValue("intensity")->load());
 
     if (numChannels > 0)
-        spectrumAnalyzer.pushSamples(buffer.getReadPointer(0), numSamples);
+        fftAnalyzer.pushSamples(buffer.getReadPointer(0), numSamples);
 
     if (!bypass)
     {
@@ -123,6 +123,7 @@ void PitchFollowEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
         if (tracking)
         {
+            engine.resetBlockDetection();
             for (int channel = 0; channel < numChannels; ++channel)
             {
                 auto* data = buffer.getWritePointer(channel);

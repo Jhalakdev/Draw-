@@ -79,22 +79,6 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
             dl.resize(IrLen, 0.0f);
     }
 
-    if (charProcessor.getType() != AnalogCharacter::Off)
-    {
-        for (int ch = 0; ch < numChannels; ++ch)
-        {
-            auto* src = block.getChannelPointer(static_cast<size_t>(ch));
-            std::copy(src, src + numSamples, charScratch[ch].begin());
-        }
-        for (int ch = 0; ch < numChannels; ++ch)
-        {
-            charProcessor.process(charScratch[ch].data(), numSamples, ch);
-            auto* firOut = block.getChannelPointer(static_cast<size_t>(ch));
-            for (int s = 0; s < numSamples; ++s)
-                firOut[s] = firOut[s] * (1.0f - charBlend) + charScratch[ch][s] * charBlend;
-        }
-    }
-
     bool hasDyn = !zones.empty();
 
     if (crossfadeRemaining > 0)
@@ -205,9 +189,11 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
 
     if (charProcessor.getType() != AnalogCharacter::Off)
     {
-        // Isolation: character ON does nothing — identical to OFF
-        // Just copy FIR output as-is (no blend, no character processing)
-        // This tests whether the routing infrastructure itself causes jitter
+        for (int ch = 0; ch < numChannels; ++ch)
+        {
+            auto* data = block.getChannelPointer(static_cast<size_t>(ch));
+            charProcessor.process(data, numSamples, ch);
+        }
     }
 }
 

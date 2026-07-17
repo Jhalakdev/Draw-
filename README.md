@@ -1,7 +1,7 @@
 # Curvex — Draw EQ
 
 Brand: **Curvex**
-Product: **Draw EQ**
+Product: **Draw EQ | v21**
 Phase modes: Minimum / Linear / Natural — zero pre-ringing cepstrum FIR
 M/S processing: Stereo / Mid / Side / Left / Right
 6 character emulations: Mister Passive, Krane Mybiz, West Nugget, Pool Dake, Never 80-8, Liquid State Solid

@@ -1,7 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "DSP/PitchFollowEngine.h"
-#include "UI/SpectrumAnalyzer.h"
+#include "DSP/FFTAnalyzer.h"
 
 class PitchFollowEQAudioProcessor : public juce::AudioProcessor
 {
@@ -35,7 +35,7 @@ public:
     float getAutoGainDb() const { return autoGainDb; }
 
     PitchFollowEngine& getEngine() { return engine; }
-    SpectrumAnalyzer& getSpectrumAnalyzer() { return spectrumAnalyzer; }
+    FFTAnalyzer& getFFTAnalyzer() { return fftAnalyzer; }
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
 
     float getCurrentPitch() const { return engine.getCurrentPitch(); }
@@ -45,7 +45,7 @@ public:
 
 private:
     PitchFollowEngine engine;
-    SpectrumAnalyzer spectrumAnalyzer;
+    FFTAnalyzer fftAnalyzer;
     juce::AudioProcessorValueTreeState apvts;
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 

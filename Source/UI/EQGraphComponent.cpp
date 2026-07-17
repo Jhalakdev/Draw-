@@ -1,6 +1,6 @@
 #include "EQGraphComponent.h"
 
-EQGraphComponent::EQGraphComponent(PitchFollowEngine& e) : engine(e)
+EQGraphComponent::EQGraphComponent(PitchFollowEngine& e, FFTAnalyzer& fft) : engine(e), fftAnalyzer(fft)
 {
     startTimerHz(20);
     setMouseCursor(juce::MouseCursor::CrosshairCursor);
@@ -11,27 +11,15 @@ void EQGraphComponent::resized() { responsePathDirty = true; }
 
 void EQGraphComponent::timerCallback()
 {
-    float pitch = engine.getCurrentPitch();
-    float conf = engine.getConfidence();
-
-    for (int i = 0; i < NumSpectrumBins; ++i)
+    if (fftAnalyzer.hasNewData())
     {
-        float binFreq = MinFreq * std::pow(MaxFreq / MinFreq,
-            static_cast<float>(i) / static_cast<float>(NumSpectrumBins));
-        float energy = 0.0f;
-        if (pitch > 20.0f && conf > 0.1f)
+        auto& mag = fftAnalyzer.getSpectrum().magnitude;
+        for (int i = 0; i < NumSpectrumBins; ++i)
         {
-            for (int h = 1; h <= 6; ++h)
-            {
-                float harmonic = pitch * static_cast<float>(h);
-                if (harmonic > MaxFreq) break;
-                float dist = std::abs(std::log2(binFreq / harmonic));
-                float hConf = conf * (1.0f / static_cast<float>(h));
-                energy += (dist < 0.3f ? (1.0f - dist / 0.3f) * hConf : 0.0f);
-            }
+            float energy = juce::jlimit(0.0f, 1.0f, mag[i]);
+            spectrumData[i] = spectrumData[i] * 0.92f + energy * 0.08f;
         }
-        energy = juce::jmin(1.0f, energy);
-        spectrumData[i] = spectrumData[i] * 0.92f + energy * 0.08f;
+        fftAnalyzer.clearNewDataFlag();
     }
 
     if (engine.getEnvelope().isDirty())

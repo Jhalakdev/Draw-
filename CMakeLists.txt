@@ -40,8 +40,8 @@ target_sources(PitchFollowEQ
         Source/DSP/PitchDetector.cpp
         Source/DSP/PitchFollowEngine.cpp
         Source/DSP/AnalogCharacter.cpp
+        Source/DSP/FFTAnalyzer.cpp
         Source/UI/EQGraphComponent.cpp
-        Source/UI/SpectrumAnalyzer.cpp
 )
 
 juce_generate_juce_header(PitchFollowEQ)

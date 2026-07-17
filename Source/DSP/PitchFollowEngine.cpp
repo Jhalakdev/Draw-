@@ -19,7 +19,15 @@ void PitchFollowEngine::process(float* channelData, int numSamples)
     if (!enabled)
         return;
 
-    pitchDetector.detect(channelData, numSamples);
+    if (!detectionRunThisBlock)
+    {
+        ++blockCounter;
+        detectionRunThisBlock = true;
+
+        if (blockCounter % DetectInterval == 0)
+            pitchDetector.detect(channelData, numSamples);
+    }
+
     float freq = pitchDetector.getFrequency();
     float conf = pitchDetector.getConfidence();
 

@@ -3,9 +3,12 @@
 SpectrumAnalyzer::SpectrumAnalyzer()
     : fft(std::make_unique<juce::dsp::FFT>(FFTOrder))
 {
-    fftInput.resize(static_cast<size_t>(FFTSize * 2), 0.0f);
+    fftInput.resize(static_cast<size_t>(FFTSize), 0.0f);
     fftOutput.resize(static_cast<size_t>(FFTSize * 2), 0.0f);
-    startTimerHz(20);
+    window.resize(static_cast<size_t>(FFTSize), 0.0f);
+    for (int i = 0; i < FFTSize; ++i)
+        window[i] = 0.5f - 0.5f * std::cos(juce::MathConstants<float>::twoPi * static_cast<float>(i) / static_cast<float>(FFTSize - 1));
+    startTimerHz(15);
 }
 
 SpectrumAnalyzer::~SpectrumAnalyzer()
@@ -17,11 +20,24 @@ void SpectrumAnalyzer::pushSamples(const float* data, int numSamples)
 {
     if (data == nullptr || numSamples <= 0) return;
 
-    for (int i = 0; i < numSamples; ++i)
+    int toCopy = numSamples;
+    int pos = writePosition;
+
+    if (pos + toCopy <= FFTSize)
     {
-        fftInput[static_cast<size_t>(writePosition)] = data[i];
-        writePosition = (writePosition + 1) % FFTSize;
+        std::copy(data, data + toCopy, fftInput.begin() + pos);
+        pos += toCopy;
     }
+    else
+    {
+        int first = FFTSize - pos;
+        std::copy(data, data + first, fftInput.begin() + pos);
+        std::copy(data + first, data + toCopy, fftInput.begin());
+        pos = (pos + toCopy) % FFTSize;
+    }
+
+    if (pos >= FFTSize) pos -= FFTSize;
+    writePosition = pos;
 
     if (writePosition == 0)
         readyToProcess = true;
@@ -29,14 +45,17 @@ void SpectrumAnalyzer::pushSamples(const float* data, int numSamples)
 
 void SpectrumAnalyzer::processFFT()
 {
-    for (int i = 0; i < FFTSize; ++i)
-        fftOutput[static_cast<size_t>(i)] = fftInput[static_cast<size_t>((writePosition + i) % FFTSize)];
+    int wp = writePosition;
+    if (wp == 0)
+        std::copy(fftInput.begin(), fftInput.end(), fftOutput.begin());
+    else
+    {
+        std::copy(fftInput.begin() + wp, fftInput.end(), fftOutput.begin());
+        std::copy(fftInput.begin(), fftInput.begin() + wp, fftOutput.begin() + (FFTSize - wp));
+    }
 
     for (int i = 0; i < FFTSize; ++i)
-    {
-        float window = 0.5f - 0.5f * std::cos(juce::MathConstants<float>::twoPi * static_cast<float>(i) / static_cast<float>(FFTSize - 1));
-        fftOutput[static_cast<size_t>(i)] *= window;
-    }
+        fftOutput[i] *= window[i];
 
     fft->performRealOnlyForwardTransform(fftOutput.data());
 
@@ -44,7 +63,7 @@ void SpectrumAnalyzer::processFFT()
     float maxMag = 0.0f;
     int maxBin = 0;
 
-    for (int i = 0; i < numBins && i < 512; ++i)
+    for (int i = 0; i < numBins && i < 256; ++i)
     {
         float re = fftOutput[static_cast<size_t>(2 * i)];
         float im = fftOutput[static_cast<size_t>(2 * i + 1)];
@@ -65,7 +84,7 @@ void SpectrumAnalyzer::processFFT()
         currentSpectrum.peakFreq = static_cast<float>(maxBin) * 44100.0f / static_cast<float>(FFTSize);
     currentSpectrum.peakMagnitude = maxMag;
 
-    for (int i = 0; i < 512; ++i)
+    for (int i = 0; i < 256; ++i)
         displaySpectrum[i] = displaySpectrum[i] * 0.7f + currentSpectrum.magnitude[i] * 0.3f;
 
     readyToProcess = false;
@@ -74,8 +93,10 @@ void SpectrumAnalyzer::processFFT()
 void SpectrumAnalyzer::timerCallback()
 {
     if (readyToProcess)
+    {
         processFFT();
-    repaint();
+        repaint();
+    }
 }
 
 void SpectrumAnalyzer::paint(juce::Graphics& g)
@@ -83,7 +104,7 @@ void SpectrumAnalyzer::paint(juce::Graphics& g)
     auto area = getLocalBounds();
     g.fillAll(juce::Colour(0xFF0D0D1A));
 
-    int numBins = juce::jmin(512, static_cast<int>(displaySpectrum.size()));
+    int numBins = juce::jmin(256, static_cast<int>(displaySpectrum.size()));
     float barWidth = static_cast<float>(area.getWidth()) / static_cast<float>(numBins);
 
     for (int i = 0; i < numBins; ++i)

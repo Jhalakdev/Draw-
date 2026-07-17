@@ -24,11 +24,13 @@ public:
     void process(float* data, int numSamples, int channel = 0);
     void setType(Type t);
     Type getType() const { return currentType; }
+    void setDrive(float d) { drive = juce::jlimit(0.0f, 1.0f, d); }
     float getFrequencyResponse(float freq) const;
 
 private:
     Type currentType = Off;
     double sampleRate = 44100.0;
+    float drive = 0.35f;
 
     struct Biquad
     {
@@ -103,6 +105,9 @@ private:
 
     float saturate(int type, float x, float drive) const;
     float saturateTube(float x, float drive) const;
+    float saturateClean(float x, float drive) const;
+    float saturateTubeAggressive(float x, float drive) const;
+    float saturateConsole(float x, float drive) const;
     float saturateTransformer(float x, float drive) const;
     float saturateVCA(float x, float drive) const;
     float saturateOpamp(float x, float drive) const;

@@ -25,7 +25,7 @@ void PitchFollowEQAudioProcessorEditor::setupSlider(juce::Slider& s, juce::Colou
 }
 
 PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollowEQAudioProcessor& p)
-    : AudioProcessorEditor(p), processorRef(p), eqGraph(p.getEngine())
+    : AudioProcessorEditor(p), processorRef(p), eqGraph(p.getEngine(), p.getFFTAnalyzer())
 {
     setLookAndFeel(&lnf);
     setSize(960, 520);
@@ -346,6 +346,9 @@ void PitchFollowEQAudioProcessorEditor::timerCallback()
     redoBtn.setEnabled(env.canRedo());
 
     levelMeter.setLevels(processorRef.getLeftLevel(), processorRef.getRightLevel());
+
+    float blendVal = processorRef.getAPVTS().getRawParameterValue("charBlend")->load();
+    charBlendLabel.setText(juce::String(static_cast<int>(blendVal)) + "%", juce::dontSendNotification);
 
     int sel = eqGraph.getSelectedZone();
     updateZonePanel(sel);

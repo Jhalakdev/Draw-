@@ -1,11 +1,12 @@
 #pragma once
 #include <JuceHeader.h>
 #include "../DSP/PitchFollowEngine.h"
+#include "../DSP/FFTAnalyzer.h"
 
 class EQGraphComponent : public juce::Component, public juce::Timer
 {
 public:
-    EQGraphComponent(PitchFollowEngine& engine);
+    EQGraphComponent(PitchFollowEngine& engine, FFTAnalyzer& fftAnalyzer);
     ~EQGraphComponent() override;
 
     void paint(juce::Graphics& g) override;
@@ -33,6 +34,7 @@ public:
 
 private:
     PitchFollowEngine& engine;
+    FFTAnalyzer& fftAnalyzer;
 
     float graphX = 0.0f, graphY = 0.0f, graphW = 0.0f, graphH = 0.0f;
     int selectedZone = -1;

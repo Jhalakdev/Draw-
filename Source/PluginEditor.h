@@ -4,7 +4,7 @@
 #include "UI/EQGraphComponent.h"
 #include "UI/LevelMeterComponent.h"
 
-#define BUILD_VERSION "v5"
+#define BUILD_VERSION "v21"
 
 class PitchFollowEQLookAndFeel : public juce::LookAndFeel_V4
 {
