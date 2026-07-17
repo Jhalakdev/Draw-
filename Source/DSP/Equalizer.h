@@ -98,6 +98,7 @@ private:
     std::vector<float> ir;
     std::vector<float> oldIr;
     std::vector<std::vector<float>> delayLine;
+    std::vector<std::vector<float>> charScratch; // pre-allocated, no heap alloc in process()
     int delayIndex = 0;
     int crossfadeRemaining = 0;
 

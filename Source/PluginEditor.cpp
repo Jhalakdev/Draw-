@@ -376,7 +376,7 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
                juce::Justification::centredLeft);
     g.setColour(LF::textMuted);
     g.setFont(juce::Font(9.0f));
-    g.drawText("Draw EQ", juce::Rectangle<int>(12, 22, 64, 16),
+    g.drawText("Draw EQ " BUILD_VERSION, juce::Rectangle<int>(12, 22, 100, 16),
                juce::Justification::centredLeft);
 
     // Separator lines between groups

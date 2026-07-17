@@ -7,9 +7,6 @@ void AnalogCharacter::prepare(double sr, int)
 {
     sampleRate = sr;
     resetState();
-    modPhase = 0.0f;
-    delayIdx = 0;
-    std::fill(delayBuf, delayBuf + DelayLen, 0.0f);
 
     float fs = (float)sr;
     if (wdfEngine) wdfEngine->prepare(fs);
@@ -19,13 +16,11 @@ void AnalogCharacter::prepare(double sr, int)
 void AnalogCharacter::resetState()
 {
     for (int i = 0; i < NumFilters; ++i) filters[i].reset();
-    inputSatFilter.reset();
     inputStage.reset();
     lowStage.reset();
     midStage.reset();
     highStage.reset();
     outputStage.reset();
-    psmEnvelope = 0.0f;
 }
 
 void AnalogCharacter::setType(Type t)
@@ -352,13 +347,9 @@ void AnalogCharacter::loadPreset()
 {
     resetState();
     for (int i = 0; i < NumFilters; ++i) filters[i].setPassthrough();
-    inputSatFilter.setPassthrough();
     filterCount = 0;
 
-    psmAttack = 0.01f; psmRelease = 0.0003f; psmDepth = 0.03f;
     loadingAmount = 0.0f;
-    imdAmount = 0.0f;
-    modAmount = 0.0f;
 
     useWDF = false;
     wdfMakeupGain = 1.0f;
@@ -386,7 +377,6 @@ void AnalogCharacter::loadPreset()
 
             filterCount = 0;
             for (int i = 0; i < NumFilters; ++i) filters[i].setPassthrough();
-            inputSatFilter.setPassthrough();
 
             setAll(inputStage, 30.0f, 250.0f, 0.12f, 0, 0.998f);
             setAll(lowStage,   10.0f, 120.0f, 0.30f, 0, 0.997f);
@@ -394,10 +384,7 @@ void AnalogCharacter::loadPreset()
             setAll(highStage,   2.0f,  40.0f, 0.15f, 0, 0.999f);
             setAll(outputStage,20.0f, 180.0f, 0.35f, 0, 0.998f);
 
-            psmAttack = 0.008f; psmRelease = 0.0002f; psmDepth = 0.04f;
             loadingAmount = 0.6f;
-            imdAmount = 0.010f;
-            modAmount = 0.0003f;
             break;
         }
 
@@ -412,7 +399,6 @@ void AnalogCharacter::loadPreset()
 
             filterCount = 0;
             for (int i = 0; i < NumFilters; ++i) filters[i].setPassthrough();
-            inputSatFilter.setPassthrough();
 
             setAll(inputStage, 20.0f, 200.0f, 0.10f, 0, 0.998f);
             setAll(lowStage,   50.0f, 350.0f, 0.08f, 1);
@@ -420,10 +406,7 @@ void AnalogCharacter::loadPreset()
             setAll(highStage,   3.0f,  25.0f, 0.06f, 1);
             setAll(outputStage,30.0f, 250.0f, 0.35f, 1);
 
-            psmAttack = 0.02f; psmRelease = 0.0005f; psmDepth = 0.015f;
             loadingAmount = 0.3f;
-            imdAmount = 0.006f;
-            modAmount = 0.0001f;
             break;
         }
 
@@ -438,7 +421,6 @@ void AnalogCharacter::loadPreset()
 
             filterCount = 0;
             for (int i = 0; i < NumFilters; ++i) filters[i].setPassthrough();
-            inputSatFilter.setPassthrough();
 
             setAll(inputStage, 25.0f, 180.0f, 0.20f, 0, 0.996f);
             setAll(lowStage,    8.0f,  90.0f, 0.50f, 0, 0.995f);
@@ -446,10 +428,7 @@ void AnalogCharacter::loadPreset()
             setAll(highStage,   1.5f,  20.0f, 0.30f, 0, 0.997f);
             setAll(outputStage,15.0f, 140.0f, 0.45f, 0, 0.996f);
 
-            psmAttack = 0.005f; psmRelease = 0.00015f; psmDepth = 0.05f;
             loadingAmount = 0.7f;
-            imdAmount = 0.015f;
-            modAmount = 0.0004f;
             break;
         }
 
@@ -464,7 +443,6 @@ void AnalogCharacter::loadPreset()
 
             filterCount = 0;
             for (int i = 0; i < NumFilters; ++i) filters[i].setPassthrough();
-            inputSatFilter.setPassthrough();
 
             setAll(inputStage, 30.0f, 220.0f, 0.12f, 0, 0.998f);
             setAll(lowStage,   15.0f, 140.0f, 0.30f, 0, 0.997f);
@@ -472,10 +450,7 @@ void AnalogCharacter::loadPreset()
             setAll(highStage,   2.5f,  25.0f, 0.18f, 0, 0.999f);
             setAll(outputStage,20.0f, 180.0f, 0.35f, 0, 0.998f);
 
-            psmAttack = 0.007f; psmRelease = 0.00018f; psmDepth = 0.035f;
             loadingAmount = 0.5f;
-            imdAmount = 0.008f;
-            modAmount = 0.0002f;
             break;
         }
 
@@ -490,7 +465,6 @@ void AnalogCharacter::loadPreset()
 
             filterCount = 0;
             for (int i = 0; i < NumFilters; ++i) filters[i].setPassthrough();
-            inputSatFilter.setPassthrough();
 
             setAll(inputStage, 35.0f, 300.0f, 0.18f, 0, 0.998f);
             setAll(lowStage,   45.0f, 250.0f, 0.28f, 1);
@@ -498,10 +472,7 @@ void AnalogCharacter::loadPreset()
             setAll(highStage,   1.5f,  12.0f, 0.15f, 3);
             setAll(outputStage,25.0f, 220.0f, 0.40f, 1);
 
-            psmAttack = 0.01f; psmRelease = 0.00025f; psmDepth = 0.03f;
             loadingAmount = 0.55f;
-            imdAmount = 0.012f;
-            modAmount = 0.00018f;
             break;
         }
 
@@ -516,7 +487,6 @@ void AnalogCharacter::loadPreset()
 
             filterCount = 0;
             for (int i = 0; i < NumFilters; ++i) filters[i].setPassthrough();
-            inputSatFilter.setPassthrough();
 
             setAll(inputStage, 12.0f, 60.0f, 0.20f, 2);
             setAll(lowStage,    5.0f,  35.0f, 0.40f, 2);
@@ -524,10 +494,7 @@ void AnalogCharacter::loadPreset()
             setAll(highStage,   0.8f,   6.0f, 0.30f, 3);
             setAll(outputStage,10.0f,  50.0f, 0.35f, 2);
 
-            psmAttack = 0.004f; psmRelease = 0.0001f; psmDepth = 0.045f;
             loadingAmount = 0.65f;
-            imdAmount = 0.018f;
-            modAmount = 0.00015f;
             break;
         }
 
@@ -542,7 +509,6 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
     if (currentType == Off) return;
 
     float sr = (float)sampleRate;
-    float modInc = juce::MathConstants<float>::twoPi * 0.15f / sr;
     auto& wdf = (channel == 0 && wdfEngine) ? *wdfEngine
                : (wdfEngine2 ? *wdfEngine2 : *wdfEngine);
     float dcCoeff = 1.0f - 10.0f / sr; // ~10 Hz high-pass
@@ -553,43 +519,25 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
         {
             float x = data[s];
 
-            // ===== DC BLOCKER (remove offset before WDF) =====
+            // ===== DC BLOCKER =====
             float prevX = dcPrevX[channel];
             dcPrevX[channel] = x;
             float blocked = x - prevX + dcCoeff * dcBlockerZ[channel];
             dcBlockerZ[channel] = blocked;
             x = blocked;
 
-            // ===== WDF PASSIVE EQ (4-band LC circuit) =====
+            // ===== WDF =====
             x = wdf.process(x);
-            x *= wdfMakeupGain; // compensate passive insertion loss
+            x *= wdfMakeupGain;
 
-            // ===== POWER SUPPLY MODULATION =====
-            float absX = std::abs(x);
-            float psmDiff = absX - psmEnvelope;
-            if (psmDiff > 0) psmEnvelope += psmAttack * psmDiff;
-            else psmEnvelope += psmRelease * psmDiff;
-            psmEnvelope = juce::jmax(0.0f, juce::jmin(1.0f, psmEnvelope));
-            float psmGain = 1.0f - psmEnvelope * psmDepth;
+            // ===== STATIC SATURATION =====
+            {
+                float drive = outputStage.baseDrive * 1.5f;
+                x = std::tanh(x * drive);
+                float norm = drive > 0.1f ? 1.0f / std::tanh(drive * 0.8f) : 1.0f;
+                x *= norm * 0.92f;
+            }
 
-            // ===== OUTPUT SATURATION (makeup stage character) =====
-            x = outputStage.process(x, outputStage.satType, outputStage.baseDrive, psmGain, 0.0f);
-
-            // ===== INTERMODULATION =====
-            int prev = (delayIdx - 1 + DelayLen) % DelayLen;
-            float imd = delayBuf[prev] * x * imdAmount;
-            delayBuf[delayIdx] = x;
-            delayIdx = (delayIdx + 1) % DelayLen;
-            x += imd * 3.0f;
-
-            // ===== BIAS MODULATION =====
-            modPhase += modInc;
-            if (modPhase > juce::MathConstants<float>::twoPi)
-                modPhase -= juce::MathConstants<float>::twoPi;
-            float mod = 1.0f + modAmount * std::sin(modPhase);
-            x *= mod;
-
-            // safety soft-clamp to prevent digital overs
             if (std::abs(x) > 1.0f)
                 x = 0.95f * std::tanh(x / 0.95f);
 
@@ -602,17 +550,8 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
         {
             float x = data[s];
 
-            // ===== POWER SUPPLY MODULATION =====
-            float absX = std::abs(x);
-            float psmDiff = absX - psmEnvelope;
-            if (psmDiff > 0) psmEnvelope += psmAttack * psmDiff;
-            else psmEnvelope += psmRelease * psmDiff;
-            psmEnvelope = juce::jmax(0.0f, juce::jmin(1.0f, psmEnvelope));
-            float psmGain = 1.0f - psmEnvelope * psmDepth;
-
             // ===== INPUT STAGE =====
-            x = inputSatFilter.process(x);
-            x = inputStage.process(x, inputStage.satType, inputStage.baseDrive, psmGain, 0.0f);
+            x = inputStage.process(x, inputStage.satType, inputStage.baseDrive, 1.0f, 0.0f);
 
             // ===== FILTER GROUP 1 (Lows) =====
             float loadFromPrev = inputStage.loading * loadingAmount;
@@ -621,7 +560,7 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
                 int end = juce::jmin(3, filterCount);
                 for (int i = 0; i < end; ++i)
                     x = filters[i].process(x);
-                x = lowStage.process(x, lowStage.satType, lowStage.baseDrive, psmGain, loadFromPrev);
+                x = lowStage.process(x, lowStage.satType, lowStage.baseDrive, 1.0f, loadFromPrev);
             }
 
             // ===== FILTER GROUP 2 (Mids) =====
@@ -631,7 +570,7 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
                 int end = juce::jmin(5, filterCount);
                 for (int i = 3; i < end; ++i)
                     x = filters[i].process(x);
-                x = midStage.process(x, midStage.satType, midStage.baseDrive, psmGain, loadFromPrev);
+                x = midStage.process(x, midStage.satType, midStage.baseDrive, 1.0f, loadFromPrev);
             }
 
             // ===== FILTER GROUP 3 (Highs) =====
@@ -640,26 +579,12 @@ void AnalogCharacter::process(float* data, int numSamples, int channel)
             {
                 for (int i = 5; i < filterCount; ++i)
                     x = filters[i].process(x);
-                x = highStage.process(x, highStage.satType, highStage.baseDrive, psmGain, loadFromPrev);
+                x = highStage.process(x, highStage.satType, highStage.baseDrive, 1.0f, loadFromPrev);
             }
 
             // ===== OUTPUT STAGE =====
             loadFromPrev = highStage.loading * loadingAmount;
-            x = outputStage.process(x, outputStage.satType, outputStage.baseDrive, psmGain, loadFromPrev);
-
-            // ===== INTERMODULATION =====
-            int prev = (delayIdx - 1 + DelayLen) % DelayLen;
-            float imd = delayBuf[prev] * x * imdAmount;
-            delayBuf[delayIdx] = x;
-            delayIdx = (delayIdx + 1) % DelayLen;
-            x += imd * 3.0f;
-
-            // ===== BIAS MODULATION =====
-            modPhase += modInc;
-            if (modPhase > juce::MathConstants<float>::twoPi)
-                modPhase -= juce::MathConstants<float>::twoPi;
-            float mod = 1.0f + modAmount * std::sin(modPhase);
-            x *= mod;
+            x = outputStage.process(x, outputStage.satType, outputStage.baseDrive, 1.0f, loadFromPrev);
 
             data[s] = x;
         }
@@ -681,7 +606,7 @@ float AnalogCharacter::getFrequencyResponse(float freq) const
         return 10.0f * std::log10(std::max(1e-10f, (reNum*reNum+imNum*imNum)/(reDen*reDen+imDen*imDen)));
     };
     float total = 0.0f;
-    total += eval(inputSatFilter);
+
     for (int i = 0; i < filterCount; ++i) total += eval(filters[i]);
     return total;
 }

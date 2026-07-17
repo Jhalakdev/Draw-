@@ -23,6 +23,9 @@ void Equalizer::prepare(double sampleRate, int samplesPerBlock)
     for (auto& dl : delayLine)
         dl.resize(IrLen, 0.0f);
     delayIndex = 0;
+    charScratch.resize(maxChannels);
+    for (auto& ch : charScratch)
+        ch.resize(samplesPerBlock, 0.0f);
     zonesDirty = true;
 }
 
@@ -74,6 +77,22 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
         delayLine.resize(numChannels);
         for (auto& dl : delayLine)
             dl.resize(IrLen, 0.0f);
+    }
+
+    if (charProcessor.getType() != AnalogCharacter::Off)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+        {
+            auto* src = block.getChannelPointer(static_cast<size_t>(ch));
+            std::copy(src, src + numSamples, charScratch[ch].begin());
+        }
+        for (int ch = 0; ch < numChannels; ++ch)
+        {
+            charProcessor.process(charScratch[ch].data(), numSamples, ch);
+            auto* firOut = block.getChannelPointer(static_cast<size_t>(ch));
+            for (int s = 0; s < numSamples; ++s)
+                firOut[s] = firOut[s] * (1.0f - charBlend) + charScratch[ch][s] * charBlend;
+        }
     }
 
     bool hasDyn = !zones.empty();
@@ -186,40 +205,9 @@ void Equalizer::process(juce::dsp::AudioBlock<float>& block)
 
     if (charProcessor.getType() != AnalogCharacter::Off)
     {
-        // Save pre-character signal (EQ'd dry) for wet/dry blend
-        std::vector<std::vector<float>> dryBuf(numChannels);
-        for (int ch = 0; ch < numChannels; ++ch)
-        {
-            dryBuf[ch].resize(numSamples);
-            auto* src = block.getChannelPointer(static_cast<size_t>(ch));
-            std::copy(src, src + numSamples, dryBuf[ch].begin());
-        }
-
-        for (int ch = 0; ch < numChannels; ++ch)
-        {
-            auto* data = block.getChannelPointer(static_cast<size_t>(ch));
-            charProcessor.process(data, numSamples);
-        }
-
-        // Wet/dry blend: character is subtle coloration on top of EQ curve
-        for (int ch = 0; ch < numChannels; ++ch)
-        {
-            auto* data = block.getChannelPointer(static_cast<size_t>(ch));
-            for (int s = 0; s < numSamples; ++s)
-                data[s] = dryBuf[ch][s] * (1.0f - charBlend) + data[s] * charBlend;
-        }
-
-        if (numChannels >= 2)
-        {
-            auto* left = block.getChannelPointer(0);
-            auto* right = block.getChannelPointer(1);
-            for (int s = 0; s < numSamples; ++s)
-            {
-                float l = left[s], r = right[s];
-                left[s] += r * 0.0015f;
-                right[s] += l * 0.0015f;
-            }
-        }
+        // Isolation: character ON does nothing — identical to OFF
+        // Just copy FIR output as-is (no blend, no character processing)
+        // This tests whether the routing infrastructure itself causes jitter
     }
 }
 

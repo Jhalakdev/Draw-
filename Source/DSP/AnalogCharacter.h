@@ -86,18 +86,9 @@ private:
     CircuitStage highStage;
     CircuitStage outputStage;
 
-    Biquad inputSatFilter;
-
-    // Power supply modulation
-    float psmEnvelope = 0.0f;
-    float psmAttack = 0.01f;
-    float psmRelease = 0.0003f;
-    float psmDepth = 0.03f;
-
     // Inter-stage loading coefficients
     float loadingAmount = 0.0f;
 
-    // IMD
     // WDF engines (one per channel for stereo mismatch)
     std::unique_ptr<WDFCharacterEngine> wdfEngine;
     std::unique_ptr<WDFCharacterEngine> wdfEngine2;
@@ -106,16 +97,6 @@ private:
     float wdfMakeupGain = 10.0f;
     float dcBlockerZ[2] = { 0.0f, 0.0f };
     float dcPrevX[2] = { 0.0f, 0.0f };
-    float charBlendSmooth = 0.0f;
-
-    static constexpr int DelayLen = 64;
-    float delayBuf[DelayLen] = { 0 };
-    int delayIdx = 0;
-    float imdAmount = 0.0f;
-
-    // Bias modulation
-    float modPhase = 0.0f;
-    float modAmount = 0.0f;
 
     void loadPreset();
     void resetState();
