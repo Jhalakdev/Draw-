@@ -263,10 +263,24 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
 
     auto header = bounds.removeFromTop(52);
 
-    juce::ColourGradient headerGrad(LF::bgPanel.withAlpha(0.98f), 0, 0,
-                                     LF::bgPanel.brighter(0.03f), 0, 52, false);
-    g.setGradientFill(headerGrad);
+    g.setColour(LF::bgPanel);
     g.fillRect(header);
+
+    // Section background fills
+    auto baseDark = LF::bgPanel;
+    auto sec1 = baseDark.brighter(0.04f);
+    auto sec2 = baseDark;
+    auto sec3 = baseDark.brighter(0.02f);
+    auto sec4 = baseDark;
+
+    g.setColour(sec1);
+    g.fillRect(80, 0, 140, 52);
+    g.setColour(sec2);
+    g.fillRect(228, 0, 208, 52);
+    g.setColour(sec3);
+    g.fillRect(440, 0, 66, 52);
+    g.setColour(sec4);
+    g.fillRect(510, 0, getWidth() - 510 - 176, 52);
 
     g.setColour(LF::border);
     g.drawLine(0.0f, 51.5f, static_cast<float>(getWidth()), 51.5f, 1.0f);
@@ -285,24 +299,24 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     int hh = 52;
     g.setColour(LF::border);
     g.drawVerticalLine(78, 0, hh);
-    g.setColour(LF::textDim);
-    g.setFont(juce::Font(6.0f));
-    g.drawText("TRACK", 82, 2, 60, 10, juce::Justification::centred);
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(10.0f).boldened());
+    g.drawText("TRACK", 82, 4, 60, 12, juce::Justification::centredLeft);
     g.setColour(LF::border);
     g.drawVerticalLine(220, 0, hh);
-    g.setColour(LF::textDim);
-    g.setFont(juce::Font(6.0f));
-    g.drawText("EMULATION", 224, 2, 200, 10, juce::Justification::centredLeft);
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(10.0f).boldened());
+    g.drawText("EMULATION", 234, 4, 180, 12, juce::Justification::centredLeft);
     g.setColour(LF::border);
     g.drawVerticalLine(436, 0, hh);
-    g.setColour(LF::textDim);
-    g.setFont(juce::Font(6.0f));
-    g.drawText("GAIN", 440, 2, 60, 10, juce::Justification::centred);
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(10.0f).boldened());
+    g.drawText("AUTO GAIN", 446, 4, 56, 12, juce::Justification::centredLeft);
     g.setColour(LF::border);
     g.drawVerticalLine(506, 0, hh);
-    g.setColour(LF::textDim);
-    g.setFont(juce::Font(6.0f));
-    g.drawText("HISTORY", 510, 2, 200, 10, juce::Justification::centredLeft);
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(10.0f).boldened());
+    g.drawText("HISTORY", 516, 4, 80, 12, juce::Justification::centredLeft);
     g.setColour(LF::border);
     g.drawVerticalLine(getWidth() - 176, 0, hh);
 }

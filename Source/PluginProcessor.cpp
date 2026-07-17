@@ -247,7 +247,10 @@ void PitchFollowEQAudioProcessor::setStateInformation(const void* data, int size
         apvts.replaceState(state);
         auto envTree = state.getChildWithName("Envelope");
         if (envTree.isValid())
+        {
             engine.getEnvelope().deserialize(envTree);
+            engine.getEnvelope().markAudioDirty();
+        }
     }
 }
 
