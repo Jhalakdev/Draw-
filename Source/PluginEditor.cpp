@@ -261,15 +261,15 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(LF::bgDark);
     g.fillRect(bounds);
 
-    auto header = bounds.removeFromTop(44);
+    auto header = bounds.removeFromTop(52);
 
     juce::ColourGradient headerGrad(LF::bgPanel.withAlpha(0.98f), 0, 0,
-                                     LF::bgPanel.brighter(0.03f), 0, 44, false);
+                                     LF::bgPanel.brighter(0.03f), 0, 52, false);
     g.setGradientFill(headerGrad);
     g.fillRect(header);
 
     g.setColour(LF::border);
-    g.drawLine(0.0f, 43.5f, static_cast<float>(getWidth()), 43.5f, 1.0f);
+    g.drawLine(0.0f, 51.5f, static_cast<float>(getWidth()), 51.5f, 1.0f);
 
     // Brand
     g.setColour(LF::accentTeal.withAlpha(0.95f));
@@ -282,29 +282,29 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
                juce::Justification::centredLeft);
 
     // Group separator lines + labels
+    int hh = 52;
     g.setColour(LF::border);
-    int h2 = 44;
-    g.drawVerticalLine(78, 10, h2 - 10);
+    g.drawVerticalLine(78, 0, hh);
     g.setColour(LF::textDim);
     g.setFont(juce::Font(6.0f));
-    g.drawText("TRACK", 82, 0, 60, 10, juce::Justification::centred);
+    g.drawText("TRACK", 82, 2, 60, 10, juce::Justification::centred);
     g.setColour(LF::border);
-    g.drawVerticalLine(220, 10, h2 - 10);
+    g.drawVerticalLine(220, 0, hh);
     g.setColour(LF::textDim);
     g.setFont(juce::Font(6.0f));
-    g.drawText("EMULATION", 224, 0, 200, 10, juce::Justification::centredLeft);
+    g.drawText("EMULATION", 224, 2, 200, 10, juce::Justification::centredLeft);
     g.setColour(LF::border);
-    g.drawVerticalLine(436, 10, h2 - 10);
+    g.drawVerticalLine(436, 0, hh);
     g.setColour(LF::textDim);
     g.setFont(juce::Font(6.0f));
-    g.drawText("GAIN", 440, 0, 60, 10, juce::Justification::centred);
+    g.drawText("GAIN", 440, 2, 60, 10, juce::Justification::centred);
     g.setColour(LF::border);
-    g.drawVerticalLine(506, 10, h2 - 10);
+    g.drawVerticalLine(506, 0, hh);
     g.setColour(LF::textDim);
     g.setFont(juce::Font(6.0f));
-    g.drawText("HISTORY", 510, 0, 200, 10, juce::Justification::centredLeft);
+    g.drawText("HISTORY", 510, 2, 200, 10, juce::Justification::centredLeft);
     g.setColour(LF::border);
-    g.drawVerticalLine(getWidth() - 176, 10, h2 - 10);
+    g.drawVerticalLine(getWidth() - 176, 0, hh);
 }
 
 void PitchFollowEQAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
@@ -323,10 +323,10 @@ void PitchFollowEQAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
 void PitchFollowEQAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
-    auto header = area.removeFromTop(44);
+    auto header = area.removeFromTop(52);
 
-    int btnY = 12;
-    int btnH = 20;
+    int btnY = 16;
+    int btnH = 22;
 
     // ===== HEADER =====
     int x = 80;
@@ -360,9 +360,9 @@ void PitchFollowEQAudioProcessorEditor::resized()
     // Pitch info right side
     auto pitchArea = header.removeFromRight(148);
     int px = pitchArea.getX();
-    noteLabel.setBounds(px, 2, 44, 34);
-    pitchLabel.setBounds(px + 44, 4, 70, 14);
-    statusLabel.setBounds(px + 44, 18, 70, 12);
+    noteLabel.setBounds(px, 6, 44, 34);
+    pitchLabel.setBounds(px + 44, 8, 70, 14);
+    statusLabel.setBounds(px + 44, 24, 70, 12);
 
     // ===== RIGHT SIDEBAR =====
     auto sidebar = area.removeFromRight(76);
