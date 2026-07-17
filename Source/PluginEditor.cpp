@@ -384,16 +384,11 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
     // Brand
     g.setColour(LF::accentTeal.withAlpha(0.95f));
     g.setFont(juce::Font(15.0f).boldened());
-    g.drawText("DRAW", juce::Rectangle<int>(12, 0, 52, 44),
+    g.drawText("Curvex", juce::Rectangle<int>(12, 2, 64, 22),
                juce::Justification::centredLeft);
     g.setColour(LF::textMuted);
-    g.setFont(juce::Font(15.0f));
-    g.drawText("EQ", juce::Rectangle<int>(64, 0, 28, 44),
-               juce::Justification::centredLeft);
-
-    g.setColour(LF::textDim);
-    g.setFont(juce::Font(7.0f));
-    g.drawText("PitchFollowAudio", juce::Rectangle<int>(12, 30, 80, 12),
+    g.setFont(juce::Font(9.0f));
+    g.drawText("Draw EQ", juce::Rectangle<int>(12, 22, 64, 16),
                juce::Justification::centredLeft);
 
     // Separator lines between groups
