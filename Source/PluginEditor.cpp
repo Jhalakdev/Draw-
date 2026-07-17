@@ -263,53 +263,67 @@ void PitchFollowEQAudioProcessorEditor::paint(juce::Graphics& g)
 
     auto header = bounds.removeFromTop(52);
 
+    // Full header background
     g.setColour(LF::bgPanel);
     g.fillRect(header);
 
-    // Section background fills — alternating shades to visually separate groups
-    auto baseDark = LF::bgPanel;
-    auto sec1 = baseDark.brighter(0.06f);
-    auto sec2 = baseDark.brighter(0.01f);
-    auto sec3 = baseDark.brighter(0.04f);
-    auto sec4 = baseDark;
+    // Section background fills — alternating brightness
+    {
+        auto base = LF::bgPanel;
+        g.setColour(base.brighter(0.06f));          // TRACK
+        g.fillRect(80, 0, 146, 52);
+        g.setColour(base.brighter(0.01f));           // EMULATION
+        g.fillRect(230, 0, 222, 52);
+        g.setColour(base.brighter(0.04f));           // AUTO GAIN
+        g.fillRect(456, 0, 66, 52);
+        g.setColour(base);                            // HISTORY
+        g.fillRect(526, 0, getWidth() - 526 - 176, 52);
+    }
 
-    g.setColour(sec1);
-    g.fillRect(80, 0, 116, 52);
-    g.setColour(sec2);
-    g.fillRect(200, 0, 218, 52);
-    g.setColour(sec3);
-    g.fillRect(422, 0, 64, 52);
-    g.setColour(sec4);
-    g.fillRect(490, 0, getWidth() - 490 - 176, 52);
+    // ---- Colored accent bars at top of each section ----
+    g.setColour(LF::accentTeal);
+    g.fillRect(80, 0, 146, 2);
+    g.setColour(LF::accentGold.withAlpha(0.65f));
+    g.fillRect(230, 0, 222, 2);
+    g.setColour(LF::accentTeal.withAlpha(0.65f));
+    g.fillRect(456, 0, 66, 2);
+    g.setColour(LF::accentGold.withAlpha(0.55f));
+    g.fillRect(526, 0, getWidth() - 526 - 176, 2);
 
+    // ---- Short separator lines aligned with button row ----
+    int sepTop = 14, sepBot = 44;
+    g.setColour(LF::border);
+    g.drawVerticalLine(78, sepTop, sepBot);
+    g.drawVerticalLine(226, sepTop, sepBot);
+    g.drawVerticalLine(454, sepTop, sepBot);
+    g.drawVerticalLine(524, sepTop, sepBot);
+    g.drawVerticalLine(getWidth() - 176, sepTop, sepBot);
+
+    // ---- Brand ----
+    g.setColour(LF::accentTeal);
+    g.setFont(juce::Font(15.0f).boldened());
+    g.drawText("Curvex", juce::Rectangle<int>(14, 5, 64, 20),
+               juce::Justification::centredLeft);
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(8.0f));
+    g.drawText("Draw EQ " BUILD_VERSION, juce::Rectangle<int>(14, 25, 64, 12),
+               juce::Justification::centredLeft);
+
+    // Brand accent dot
+    g.setColour(LF::accentTeal);
+    g.fillRoundedRectangle(4.0f, 12.0f, 4.0f, 4.0f, 2.0f);
+
+    // ---- Section labels (under accent bars) ----
+    g.setColour(LF::textMuted);
+    g.setFont(juce::Font(8.0f).boldened());
+    g.drawText("TRACK", 86, 6, 60, 10, juce::Justification::centredLeft);
+    g.drawText("EMULATION", 236, 6, 180, 10, juce::Justification::centredLeft);
+    g.drawText("AUTO GAIN", 462, 6, 54, 10, juce::Justification::centredLeft);
+    g.drawText("HISTORY", 532, 6, 80, 10, juce::Justification::centredLeft);
+
+    // Bottom border
     g.setColour(LF::border);
     g.drawLine(0.0f, 51.5f, static_cast<float>(getWidth()), 51.5f, 1.0f);
-
-    // Brand
-    g.setColour(LF::accentTeal.withAlpha(0.95f));
-    g.setFont(juce::Font(15.0f).boldened());
-    g.drawText("Curvex", juce::Rectangle<int>(12, 2, 64, 22),
-               juce::Justification::centredLeft);
-    g.setColour(LF::textMuted);
-    g.setFont(juce::Font(9.0f));
-    g.drawText("Draw EQ " BUILD_VERSION, juce::Rectangle<int>(12, 22, 100, 16),
-               juce::Justification::centredLeft);
-
-    // Group separator lines + labels
-    int hh = 52;
-    g.setColour(LF::border);
-    g.drawVerticalLine(78, 0, hh);
-    g.drawVerticalLine(198, 0, hh);
-    g.drawVerticalLine(420, 0, hh);
-    g.drawVerticalLine(488, 0, hh);
-    g.drawVerticalLine(getWidth() - 176, 0, hh);
-
-    g.setColour(LF::textMuted);
-    g.setFont(juce::Font(10.0f).boldened());
-    g.drawText("TRACK", 86, 4, 60, 12, juce::Justification::centredLeft);
-    g.drawText("EMULATION", 206, 4, 180, 12, juce::Justification::centredLeft);
-    g.drawText("AUTO GAIN", 428, 4, 54, 12, juce::Justification::centredLeft);
-    g.drawText("HISTORY", 496, 4, 80, 12, juce::Justification::centredLeft);
 }
 
 void PitchFollowEQAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
@@ -335,22 +349,22 @@ void PitchFollowEQAudioProcessorEditor::resized()
 
     // ===== HEADER — groups mapped to paint section boundaries =====
 
-    // Group 1: TRACKING (80-196)
-    trackingBtn.setBounds(80, btnY, 68, btnH);
-    bypassBtn.setBounds(152, btnY, 42, btnH);
+    // Group 1: TRACKING (80-226)
+    trackingBtn.setBounds(82, btnY, 90, btnH);
+    bypassBtn.setBounds(178, btnY, 44, btnH);
 
-    // Group 2: EMULATION (200-418)
-    charCombo.setBounds(200, btnY, 128, btnH);
-    charBlendSlider.setBounds(336, btnY - 2, 80, btnH + 8);
-    charBlendLabel.setBounds(336, btnY - 14, 80, 12);
+    // Group 2: EMULATION (230-454)
+    charCombo.setBounds(232, btnY, 128, btnH);
+    charBlendSlider.setBounds(366, btnY - 2, 84, btnH + 8);
+    charBlendLabel.setBounds(366, btnY - 14, 84, 12);
 
-    // Group 3: AUTO GAIN (422-486)
-    autoGainBtn.setBounds(422, btnY, 62, btnH);
+    // Group 3: AUTO GAIN (456-524)
+    autoGainBtn.setBounds(458, btnY, 62, btnH);
 
-    // Group 4: HISTORY (490-784) — evenly spread across 294px
-    undoBtn.setBounds(526, btnY, 50, btnH);
-    redoBtn.setBounds(612, btnY, 50, btnH);
-    clearBtn.setBounds(698, btnY, 50, btnH);
+    // Group 4: HISTORY (526-784) — evenly spread across 258px
+    undoBtn.setBounds(560, btnY, 48, btnH);
+    redoBtn.setBounds(630, btnY, 48, btnH);
+    clearBtn.setBounds(700, btnY, 48, btnH);
 
     // Pitch info right side (784-960, 176px)
     auto pitchArea = header.removeFromRight(148);
