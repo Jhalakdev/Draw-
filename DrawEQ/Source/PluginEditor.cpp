@@ -256,6 +256,15 @@ void DrawEQSimpleEditor::timerCallback()
         pitchLabel.setText("--- Hz", juce::dontSendNotification);
     }
 
+    auto& env = processorRef.getEngine().getEnvelope();
+    if (env.isAudioDirty())
+    {
+        env.clearAudioDirty();
+        processorRef.getEngine().getEqualizer().markDirty();
+        processorRef.getEngine().getEqualizer().flushDirty();
+        eqGraph.markResponseDirty();
+    }
+
     levelMeter.setLevels(processorRef.getLeftLevel(), processorRef.getRightLevel());
     eqGraph.repaint();
     repaint();
