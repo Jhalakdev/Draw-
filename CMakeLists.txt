@@ -237,3 +237,52 @@ set_target_properties(CrystalGainPro PROPERTIES
 )
 
 juce_generate_juce_header(CrystalGainPro)
+
+# ============================================================
+# 5. Cat's Hair
+# ============================================================
+juce_add_plugin(CatsHair
+    BUNDLE_ID               "com.Curvex.CatsHair"
+    COMPANY_NAME           "Curvex"
+    PLUGIN_MANUFACTURER_CODE Draw
+    PLUGIN_CODE            CtHr
+    FORMATS                AU VST3 Standalone
+    PRODUCT_NAME           "Cat's Hair"
+    IS_SYNTH               FALSE
+    NEEDS_MIDI_INPUT       FALSE
+    NEEDS_MIDI_OUTPUT      FALSE
+    IS_MIDI_EFFECT         FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    COPY_PLUGIN_AFTER_BUILD TRUE
+    PLUGIN_AU_EXPORT_PREFIX CatsHairAU
+    VST3_CATEGORIES        Audio Effects
+)
+
+target_sources(CatsHair
+    PRIVATE
+        CatsHair/Source/PluginProcessor.cpp
+        CatsHair/Source/PluginEditor.cpp
+)
+
+target_compile_definitions(CatsHair
+    PUBLIC
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_DISPLAY_SPLASH_SCREEN=0
+)
+
+target_link_libraries(CatsHair
+    PRIVATE
+        juce::juce_audio_utils
+        juce::juce_dsp
+    PUBLIC
+        juce::juce_recommended_config_flags
+)
+
+set_target_properties(CatsHair PROPERTIES
+    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.curvex.CatsHair"
+    XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "11.0"
+)
+
+juce_generate_juce_header(CatsHair)
