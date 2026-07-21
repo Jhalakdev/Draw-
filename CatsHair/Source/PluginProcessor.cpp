@@ -141,6 +141,8 @@ void CatsHairProcessor::processFrame()
     float shapeMag[numBins + 1];
     float shapePhase[numBins + 1];
 
+    float normFactor = fftSize * 0.25f;
+
     for (int i = 0; i <= numBins; ++i)
     {
         float re = fftData[i * 2];
@@ -149,10 +151,14 @@ void CatsHairProcessor::processFrame()
         float phase = std::atan2(im, re);
 
         float targetDb = targetCurve[i];
-        float targetMag = juce::Decibels::decibelsToGain(targetDb);
+        float magNorm = mag / normFactor;
+        float magDb = juce::Decibels::gainToDecibels(magNorm, -120.0f);
 
-        if (mag > targetMag)
-            mag = targetMag;
+        if (magDb > targetDb)
+        {
+            float limitedNorm = juce::Decibels::decibelsToGain(targetDb);
+            mag = limitedNorm * normFactor;
+        }
 
         shapeMag[i] = mag;
         shapePhase[i] = phase;
