@@ -60,13 +60,7 @@ private:
     LevelMeterComponent levelMeter;
     EQGraphComponent eqGraph;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> trackingBtnAttach;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> bypassBtnAttach;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> autoGainAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> phaseAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> msAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttach;
-
-    void styleBtn(juce::TextButton& btn, const juce::Colour& accent);
-    void styleCombo(juce::ComboBox& cb);
 };

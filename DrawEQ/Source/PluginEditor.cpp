@@ -37,11 +37,58 @@ DrawEQSimpleEditor::DrawEQSimpleEditor(DrawEQSimpleProcessor& p)
     };
 
     styleBtn(trackingBtn, DrawEQLF::accentTeal);
+    trackingBtn.setClickingTogglesState(true);
+    trackingBtn.onClick = [this]()
+    {
+        bool on = trackingBtn.getToggleState();
+        processorRef.getAPVTS().getParameter("tracking")->setValueNotifyingHost(on ? 1.0f : 0.0f);
+    };
+
     styleBtn(bypassBtn, DrawEQLF::accentRed);
+    bypassBtn.setClickingTogglesState(true);
+    bypassBtn.onClick = [this]()
+    {
+        bool on = bypassBtn.getToggleState();
+        processorRef.getAPVTS().getParameter("bypass")->setValueNotifyingHost(on ? 1.0f : 0.0f);
+    };
+
     styleBtn(autoGainBtn, DrawEQLF::accentTeal);
+    autoGainBtn.setClickingTogglesState(true);
+    autoGainBtn.onClick = [this]()
+    {
+        bool on = autoGainBtn.getToggleState();
+        processorRef.getAPVTS().getParameter("autoGain")->setValueNotifyingHost(on ? 1.0f : 0.0f);
+    };
+
     styleBtn(undoBtn, DrawEQLF::accentGold);
     styleBtn(redoBtn, DrawEQLF::accentGold);
     styleBtn(clearBtn, DrawEQLF::accentRed);
+
+    undoBtn.onClick = [this]()
+    {
+        auto& env = processorRef.getEngine().getEnvelope();
+        env.undo();
+        env.markAudioDirty();
+        eqGraph.markResponseDirty();
+        eqGraph.repaint();
+    };
+    redoBtn.onClick = [this]()
+    {
+        auto& env = processorRef.getEngine().getEnvelope();
+        env.redo();
+        env.markAudioDirty();
+        eqGraph.markResponseDirty();
+        eqGraph.repaint();
+    };
+    clearBtn.onClick = [this]()
+    {
+        auto& env = processorRef.getEngine().getEnvelope();
+        env.pushUndo();
+        env.clear();
+        env.markAudioDirty();
+        eqGraph.markResponseDirty();
+        eqGraph.repaint();
+    };
 
     styleCombo(phaseCombo);
     phaseCombo.addItemList({"Minimum", "Linear", "Natural"}, 1);
@@ -83,12 +130,6 @@ DrawEQSimpleEditor::DrawEQSimpleEditor(DrawEQSimpleProcessor& p)
     addAndMakeVisible(pitchLabel);
     addAndMakeVisible(statusLabel);
 
-    trackingBtnAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        processorRef.getAPVTS(), "tracking", trackingBtn);
-    bypassBtnAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        processorRef.getAPVTS(), "bypass", bypassBtn);
-    autoGainAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
-        processorRef.getAPVTS(), "autoGain", autoGainBtn);
     phaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         processorRef.getAPVTS(), "phaseMode", phaseCombo);
     msAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -235,6 +276,8 @@ void DrawEQSimpleEditor::timerCallback()
 
     autoGainBtn.setColour(juce::TextButton::textColourOffId,
                           autoGainOn ? DrawEQLF::accentGold : DrawEQLF::textBright);
+    trackingBtn.setToggleState(tracking, juce::dontSendNotification);
+    bypassBtn.setToggleState(bypass, juce::dontSendNotification);
     bypassBtn.setColour(juce::TextButton::textColourOffId,
                         bypass ? DrawEQLF::accentRed :
                         (tracking ? DrawEQLF::accentTeal : DrawEQLF::accentRed));
@@ -264,6 +307,10 @@ void DrawEQSimpleEditor::timerCallback()
         processorRef.getEngine().getEqualizer().flushDirty();
         eqGraph.markResponseDirty();
     }
+
+    undoBtn.setEnabled(env.canUndo());
+    redoBtn.setEnabled(env.canRedo());
+    autoGainBtn.setToggleState(autoGainOn, juce::dontSendNotification);
 
     levelMeter.setLevels(processorRef.getLeftLevel(), processorRef.getRightLevel());
     eqGraph.repaint();
