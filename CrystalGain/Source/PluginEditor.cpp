@@ -14,10 +14,14 @@ CrystalGainEditor::CrystalGainEditor(CrystalGainProcessor& p)
     setLookAndFeel(&laf);
     setSize(280, 360);
 
-    gainKnob.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    gainKnob.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    gainKnob.setColour(juce::Slider::rotarySliderFillColourId, CrystalGainLF::accentTeal.withAlpha(0.3f));
-    gainKnob.setColour(juce::Slider::rotarySliderOutlineColourId, CrystalGainLF::border);
+    gainKnob.setSliderStyle(juce::Slider::LinearVertical);
+    gainKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 14);
+    gainKnob.setColour(juce::Slider::trackColourId, CrystalGainLF::accentTeal.withAlpha(0.4f));
+    gainKnob.setColour(juce::Slider::thumbColourId, CrystalGainLF::accentTeal);
+    gainKnob.setColour(juce::Slider::backgroundColourId, CrystalGainLF::bgPanel.brighter(0.05f));
+    gainKnob.setColour(juce::Slider::textBoxTextColourId, CrystalGainLF::accentTeal);
+    gainKnob.setColour(juce::Slider::textBoxBackgroundColourId, CrystalGainLF::bgPanel);
+    gainKnob.setColour(juce::Slider::textBoxOutlineColourId, CrystalGainLF::border);
 
     gainLabel.setColour(juce::Label::textColourId, CrystalGainLF::textMuted);
     gainLabel.setFont(juce::Font(10.0f).boldened());
@@ -43,15 +47,23 @@ CrystalGainEditor::CrystalGainEditor(CrystalGainProcessor& p)
     monoBtn.setClickingTogglesState(true);
 
     balanceSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-    balanceSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    balanceSlider.setTextBoxStyle(juce::Slider::TextBoxLeft, false, 36, 16);
     balanceSlider.setColour(juce::Slider::trackColourId, CrystalGainLF::border);
     balanceSlider.setColour(juce::Slider::thumbColourId, CrystalGainLF::accentTeal);
     balanceSlider.setColour(juce::Slider::backgroundColourId, CrystalGainLF::bgPanel.brighter(0.05f));
+    balanceSlider.setColour(juce::Slider::textBoxTextColourId, CrystalGainLF::accentTeal);
+    balanceSlider.setColour(juce::Slider::textBoxBackgroundColourId, CrystalGainLF::bgPanel);
+    balanceSlider.setColour(juce::Slider::textBoxOutlineColourId, CrystalGainLF::border);
 
     balanceLabel.setColour(juce::Label::textColourId, CrystalGainLF::textDim);
     balanceLabel.setFont(juce::Font(8.0f));
     balanceLabel.setText("BAL", juce::dontSendNotification);
     balanceLabel.setJustificationType(juce::Justification::centred);
+
+    panLabel.setColour(juce::Label::textColourId, CrystalGainLF::accentTeal);
+    panLabel.setFont(juce::Font(10.0f).boldened());
+    panLabel.setText("C", juce::dontSendNotification);
+    panLabel.setJustificationType(juce::Justification::centred);
 
     addAndMakeVisible(gainKnob);
     addAndMakeVisible(gainLabel);
@@ -60,6 +72,7 @@ CrystalGainEditor::CrystalGainEditor(CrystalGainProcessor& p)
     addAndMakeVisible(monoBtn);
     addAndMakeVisible(balanceSlider);
     addAndMakeVisible(balanceLabel);
+    addAndMakeVisible(panLabel);
     addAndMakeVisible(levelMeter);
 
     gainAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -100,19 +113,18 @@ void CrystalGainEditor::resized()
     auto top = area.removeFromTop(28);
     gainLabel.setBounds(top);
 
-    auto knobArea = area.removeFromTop(160).reduced(20, 0);
-    gainKnob.setBounds(knobArea.withSizeKeepingCentre(knobArea.getHeight(), knobArea.getHeight()));
-
-    auto valArea = knobArea.removeFromBottom(30);
-    valueLabel.setBounds(valArea);
+    auto faderArea = area.removeFromTop(170).reduced(30, 8);
+    gainKnob.setBounds(faderArea.removeFromLeft(70));
+    valueLabel.setBounds(faderArea);
 
     auto btnRow = area.removeFromTop(36).reduced(30, 0);
     phaseBtn.setBounds(btnRow.removeFromLeft(btnRow.getWidth() / 2).reduced(4));
     monoBtn.setBounds(btnRow.reduced(4));
 
     auto balArea = area.removeFromTop(36).reduced(30, 4);
-    balanceLabel.setBounds(balArea.removeFromTop(12));
-    balanceSlider.setBounds(balArea);
+    panLabel.setBounds(balArea.removeFromLeft(40));
+    balanceLabel.setBounds(balArea.removeFromLeft(24));
+    balanceSlider.setBounds(balArea.reduced(0, 6));
 
     levelMeter.setBounds(area.reduced(20, 4));
 }
@@ -120,14 +132,16 @@ void CrystalGainEditor::resized()
 void CrystalGainEditor::timerCallback()
 {
     float gainDb = processorRef.getGainDb();
-    bool phase = processorRef.getAPVTS().getRawParameterValue("phase")->load() > 0.5f;
-    bool mono = processorRef.getAPVTS().getRawParameterValue("mono")->load() > 0.5f;
+    float balance = processorRef.getAPVTS().getRawParameterValue("balance")->load();
 
     valueLabel.setText(juce::String(gainDb, 1) + " dB", juce::dontSendNotification);
-    phaseBtn.setColour(juce::TextButton::textColourOffId,
-                       phase ? CrystalGainLF::accentTeal : CrystalGainLF::textMuted);
-    monoBtn.setColour(juce::TextButton::textColourOffId,
-                      mono ? CrystalGainLF::accentTeal : CrystalGainLF::textMuted);
+
+    if (std::abs(balance) < 0.01f)
+        panLabel.setText("C", juce::dontSendNotification);
+    else if (balance < 0.0f)
+        panLabel.setText("L" + juce::String((int)std::round(-balance * 100.0f)), juce::dontSendNotification);
+    else
+        panLabel.setText("R" + juce::String((int)std::round(balance * 100.0f)), juce::dontSendNotification);
 
     levelMeter.setLevels(processorRef.getLeftLevel(), processorRef.getRightLevel());
 }

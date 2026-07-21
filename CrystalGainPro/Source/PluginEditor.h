@@ -45,11 +45,12 @@ private:
     CrystalGainProLF laf;
 
     juce::ComboBox charCombo;
+    juce::Label colorsLabel;
     juce::Slider gainFader, colorFader;
     juce::Label gainLabel, colorLabel, valueLabel, titleLabel, colorValLabel;
-    juce::TextButton phaseBtn{"\u2205"}, monoBtn{"M"};
+    juce::TextButton phaseBtn{"PHASE"}, monoBtn{"M"};
     juce::Slider balanceSlider;
-    juce::Label balanceLabel;
+    juce::Label balanceLabel, panLabel;
     LevelMeterComponent levelMeter;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> charAttach;

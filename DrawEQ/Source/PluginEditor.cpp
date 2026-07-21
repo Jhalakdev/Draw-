@@ -109,10 +109,13 @@ DrawEQSimpleEditor::DrawEQSimpleEditor(DrawEQSimpleProcessor& p)
     gainLabel.setFont(juce::Font(9.0f));
 
     gainSlider.setSliderStyle(juce::Slider::LinearVertical);
-    gainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    gainSlider.setColour(juce::Slider::trackColourId, DrawEQLF::accentTeal.withAlpha(0.3f));
+    gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 44, 14);
+    gainSlider.setColour(juce::Slider::trackColourId, DrawEQLF::accentTeal.withAlpha(0.4f));
     gainSlider.setColour(juce::Slider::thumbColourId, DrawEQLF::accentTeal);
     gainSlider.setColour(juce::Slider::backgroundColourId, DrawEQLF::bgPanel.brighter(0.05f));
+    gainSlider.setColour(juce::Slider::textBoxTextColourId, DrawEQLF::accentTeal);
+    gainSlider.setColour(juce::Slider::textBoxBackgroundColourId, DrawEQLF::bgPanel);
+    gainSlider.setColour(juce::Slider::textBoxOutlineColourId, DrawEQLF::border);
 
     addAndMakeVisible(eqGraph);
     addAndMakeVisible(levelMeter);

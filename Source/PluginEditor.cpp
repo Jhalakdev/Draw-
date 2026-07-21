@@ -111,10 +111,13 @@ PitchFollowEQAudioProcessorEditor::PitchFollowEQAudioProcessorEditor(PitchFollow
         processorRef.getAPVTS(), "character", charCombo);
 
     charBlendSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-    charBlendSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    charBlendSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 40, 14);
     charBlendSlider.setColour(juce::Slider::trackColourId, LF::border);
     charBlendSlider.setColour(juce::Slider::thumbColourId, LF::accentGold);
     charBlendSlider.setColour(juce::Slider::backgroundColourId, LF::bgPanel);
+    charBlendSlider.setColour(juce::Slider::textBoxTextColourId, LF::accentGold);
+    charBlendSlider.setColour(juce::Slider::textBoxBackgroundColourId, LF::bgPanel);
+    charBlendSlider.setColour(juce::Slider::textBoxOutlineColourId, LF::border);
     addAndMakeVisible(charBlendSlider);
     charBlendAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processorRef.getAPVTS(), "charBlend", charBlendSlider);

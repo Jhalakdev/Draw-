@@ -30,17 +30,28 @@ CrystalGainProEditor::CrystalGainProEditor(CrystalGainProProcessor& p)
     charCombo.addItemList({"Off", "Mister Passive", "Krane Mybiz", "West Nugget",
                            "Pool Dake", "Never 80-8", "Liquid State Solid"}, 1);
 
+    colorsLabel.setColour(juce::Label::textColourId, CrystalGainProLF::accentGold);
+    colorsLabel.setFont(juce::Font(8.0f).boldened());
+    colorsLabel.setText("COLORS", juce::dontSendNotification);
+    colorsLabel.setJustificationType(juce::Justification::centred);
+
     gainFader.setSliderStyle(juce::Slider::LinearVertical);
-    gainFader.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    gainFader.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 14);
     gainFader.setColour(juce::Slider::trackColourId, CrystalGainProLF::accentTeal.withAlpha(0.4f));
     gainFader.setColour(juce::Slider::thumbColourId, CrystalGainProLF::accentTeal);
     gainFader.setColour(juce::Slider::backgroundColourId, CrystalGainProLF::bgPanel.brighter(0.05f));
+    gainFader.setColour(juce::Slider::textBoxTextColourId, CrystalGainProLF::accentTeal);
+    gainFader.setColour(juce::Slider::textBoxBackgroundColourId, CrystalGainProLF::bgPanel);
+    gainFader.setColour(juce::Slider::textBoxOutlineColourId, CrystalGainProLF::border);
 
     colorFader.setSliderStyle(juce::Slider::LinearVertical);
-    colorFader.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    colorFader.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 14);
     colorFader.setColour(juce::Slider::trackColourId, CrystalGainProLF::accentGold.withAlpha(0.4f));
     colorFader.setColour(juce::Slider::thumbColourId, CrystalGainProLF::accentGold);
     colorFader.setColour(juce::Slider::backgroundColourId, CrystalGainProLF::bgPanel.brighter(0.05f));
+    colorFader.setColour(juce::Slider::textBoxTextColourId, CrystalGainProLF::accentGold);
+    colorFader.setColour(juce::Slider::textBoxBackgroundColourId, CrystalGainProLF::bgPanel);
+    colorFader.setColour(juce::Slider::textBoxOutlineColourId, CrystalGainProLF::border);
 
     titleLabel.setColour(juce::Label::textColourId, CrystalGainProLF::textMuted);
     titleLabel.setFont(juce::Font(12.0f).boldened());
@@ -80,17 +91,26 @@ CrystalGainProEditor::CrystalGainProEditor(CrystalGainProProcessor& p)
     monoBtn.setClickingTogglesState(true);
 
     balanceSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-    balanceSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    balanceSlider.setTextBoxStyle(juce::Slider::TextBoxLeft, false, 36, 16);
     balanceSlider.setColour(juce::Slider::trackColourId, CrystalGainProLF::border);
     balanceSlider.setColour(juce::Slider::thumbColourId, CrystalGainProLF::accentTeal);
     balanceSlider.setColour(juce::Slider::backgroundColourId, CrystalGainProLF::bgPanel.brighter(0.05f));
+    balanceSlider.setColour(juce::Slider::textBoxTextColourId, CrystalGainProLF::accentTeal);
+    balanceSlider.setColour(juce::Slider::textBoxBackgroundColourId, CrystalGainProLF::bgPanel);
+    balanceSlider.setColour(juce::Slider::textBoxOutlineColourId, CrystalGainProLF::border);
 
     balanceLabel.setColour(juce::Label::textColourId, CrystalGainProLF::textDim);
     balanceLabel.setFont(juce::Font(8.0f));
     balanceLabel.setText("BAL", juce::dontSendNotification);
     balanceLabel.setJustificationType(juce::Justification::centred);
 
+    panLabel.setColour(juce::Label::textColourId, CrystalGainProLF::accentTeal);
+    panLabel.setFont(juce::Font(10.0f).boldened());
+    panLabel.setText("C", juce::dontSendNotification);
+    panLabel.setJustificationType(juce::Justification::centred);
+
     addAndMakeVisible(charCombo);
+    addAndMakeVisible(colorsLabel);
     addAndMakeVisible(gainFader);
     addAndMakeVisible(colorFader);
     addAndMakeVisible(gainLabel);
@@ -102,6 +122,7 @@ CrystalGainProEditor::CrystalGainProEditor(CrystalGainProProcessor& p)
     addAndMakeVisible(monoBtn);
     addAndMakeVisible(balanceSlider);
     addAndMakeVisible(balanceLabel);
+    addAndMakeVisible(panLabel);
     addAndMakeVisible(levelMeter);
 
     charAttach = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -161,6 +182,8 @@ void CrystalGainProEditor::resized()
 
     // Character combo
     auto charArea = area.removeFromTop(32).reduced(20, 4);
+    auto colorsLblArea = charArea.removeFromLeft(46);
+    colorsLabel.setBounds(colorsLblArea);
     charCombo.setBounds(charArea);
 
     // Faders area
@@ -183,6 +206,7 @@ void CrystalGainProEditor::resized()
     auto ctrlArea = area.removeFromTop(44).reduced(20, 4);
     phaseBtn.setBounds(ctrlArea.removeFromLeft(60).reduced(2));
     monoBtn.setBounds(ctrlArea.removeFromLeft(60).reduced(2));
+    panLabel.setBounds(ctrlArea.removeFromLeft(44));
     balanceLabel.setBounds(ctrlArea.removeFromLeft(24));
     balanceSlider.setBounds(ctrlArea.reduced(0, 6));
 
@@ -194,15 +218,17 @@ void CrystalGainProEditor::timerCallback()
 {
     float gainDb = processorRef.getGainDb();
     float color = processorRef.getAPVTS().getRawParameterValue("color")->load();
-    bool phase = processorRef.getAPVTS().getRawParameterValue("phase")->load() > 0.5f;
-    bool mono = processorRef.getAPVTS().getRawParameterValue("mono")->load() > 0.5f;
+    float balance = processorRef.getAPVTS().getRawParameterValue("balance")->load();
 
     valueLabel.setText(juce::String(gainDb, 1) + " dB", juce::dontSendNotification);
     colorValLabel.setText(juce::String((int)color) + "%", juce::dontSendNotification);
-    phaseBtn.setColour(juce::TextButton::textColourOffId,
-                       phase ? CrystalGainProLF::accentTeal : CrystalGainProLF::textMuted);
-    monoBtn.setColour(juce::TextButton::textColourOffId,
-                      mono ? CrystalGainProLF::accentTeal : CrystalGainProLF::textMuted);
+
+    if (std::abs(balance) < 0.01f)
+        panLabel.setText("C", juce::dontSendNotification);
+    else if (balance < 0.0f)
+        panLabel.setText("L" + juce::String((int)std::round(-balance * 100.0f)), juce::dontSendNotification);
+    else
+        panLabel.setText("R" + juce::String((int)std::round(balance * 100.0f)), juce::dontSendNotification);
 
     levelMeter.setLevels(processorRef.getLeftLevel(), processorRef.getRightLevel());
 }

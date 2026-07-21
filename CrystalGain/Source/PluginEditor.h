@@ -27,18 +27,7 @@ public:
         g.drawRoundedRectangle(bounds, 4.0f, 1.0f);
     }
 
-    void drawRotarySlider(juce::Graphics& g, int x, int y, int w, int h, float pos,
-                          float startAngle, float endAngle, juce::Slider&) override
-    {
-        auto cx = x + w * 0.5f, cy = y + h * 0.5f, r = jmin(w, h) * 0.4f;
-        g.setColour(bgPanel.brighter(0.08f));
-        g.fillEllipse(cx - r, cy - r, r * 2, r * 2);
-        g.setColour(border);
-        g.drawEllipse(cx - r, cy - r, r * 2, r * 2, 1.0f);
-        float angle = startAngle + pos * (endAngle - startAngle);
-        g.setColour(accentTeal);
-        g.drawLine(cx, cy, cx + r * 0.85f * std::cos(angle), cy + r * 0.85f * std::sin(angle), 2.0f);
-    }
+
 };
 
 class CrystalGainEditor : public juce::AudioProcessorEditor, public juce::Timer
@@ -57,8 +46,9 @@ private:
 
     juce::Slider gainKnob;
     juce::Label gainLabel, valueLabel;
-    juce::TextButton phaseBtn{"\u2205"}, monoBtn{"M"};
+    juce::TextButton phaseBtn{"PHASE"}, monoBtn{"M"};
     juce::Label balanceLabel;
+    juce::Label panLabel;
     juce::Slider balanceSlider;
     LevelMeterComponent levelMeter;
 
